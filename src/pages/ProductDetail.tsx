@@ -24,10 +24,10 @@ const ProductDetail = () => {
         <main className="flex-grow flex items-center justify-center">
           <Container>
             <div className="text-center py-16">
-              <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-              <p className="text-muted-foreground mb-8">The product you're looking for doesn't exist.</p>
+              <h1 className="text-2xl font-bold mb-4">Товар не найден</h1>
+              <p className="text-muted-foreground mb-8">Товар, который вы ищете, не существует.</p>
               <Button onClick={() => navigate('/products')}>
-                View All Products
+                Посмотреть все товары
               </Button>
             </div>
           </Container>
@@ -59,7 +59,7 @@ const ProductDetail = () => {
             className="flex items-center text-sm mb-6 hover:text-primary transition-colors"
           >
             <ArrowLeft size={16} className="mr-1" />
-            Back
+            Назад
           </button>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
@@ -80,7 +80,7 @@ const ProductDetail = () => {
                   >
                     <img 
                       src={product.image} 
-                      alt={`${product.name} - View ${index}`} 
+                      alt={`${product.name} - Вид ${index}`} 
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -110,7 +110,7 @@ const ProductDetail = () => {
                         ))}
                       </div>
                       <span className="ml-2 text-sm text-muted-foreground">
-                        ({product.reviews} reviews)
+                        ({product.reviews} отзывов)
                       </span>
                     </div>
                   </div>
@@ -127,13 +127,13 @@ const ProductDetail = () => {
                   <div className="flex flex-col space-y-6">
                     {/* Quantity selector */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Quantity</label>
+                      <label className="text-sm font-medium mb-2 block">Количество</label>
                       <div className="flex items-center">
                         <button 
                           onClick={() => handleQuantityChange(-1)}
                           disabled={quantity <= 1}
                           className="p-1 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
-                          aria-label="Decrease quantity"
+                          aria-label="Уменьшить количество"
                         >
                           <MinusCircle size={20} />
                         </button>
@@ -141,7 +141,7 @@ const ProductDetail = () => {
                         <button 
                           onClick={() => handleQuantityChange(1)}
                           className="p-1 text-muted-foreground hover:text-primary transition-colors"
-                          aria-label="Increase quantity"
+                          aria-label="Увеличить количество"
                         >
                           <PlusCircle size={20} />
                         </button>
@@ -154,13 +154,13 @@ const ProductDetail = () => {
                         className="flex-1 rounded-full"
                         size="default"
                       >
-                        <ShoppingCart size={18} className="mr-2" /> Add to Cart
+                        <ShoppingCart size={18} className="mr-2" /> В корзину
                       </Button>
                       <Button 
                         variant="outline"
                         className="rounded-full"
                       >
-                        <Heart size={18} className="mr-2" /> Save
+                        <Heart size={18} className="mr-2" /> Сохранить
                       </Button>
                     </div>
                     
@@ -169,15 +169,15 @@ const ProductDetail = () => {
                       <div className="flex items-start gap-3">
                         <Truck className="text-muted-foreground flex-shrink-0 mt-0.5" size={18} />
                         <div>
-                          <h4 className="font-medium">Free Shipping</h4>
-                          <p className="text-sm text-muted-foreground">Free standard shipping on orders over $50</p>
+                          <h4 className="font-medium">Бесплатная доставка</h4>
+                          <p className="text-sm text-muted-foreground">Бесплатная стандартная доставка для заказов от $50</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3 mt-4">
                         <Info className="text-muted-foreground flex-shrink-0 mt-0.5" size={18} />
                         <div>
-                          <h4 className="font-medium">Returns</h4>
-                          <p className="text-sm text-muted-foreground">30-day return policy for unused items</p>
+                          <h4 className="font-medium">Возврат</h4>
+                          <p className="text-sm text-muted-foreground">30-дневная политика возврата для неиспользованных товаров</p>
                         </div>
                       </div>
                     </div>
@@ -190,7 +190,7 @@ const ProductDetail = () => {
           {/* Related Products */}
           {relatedProducts.length > 0 && (
             <section className="mt-24 mb-16">
-              <h2 className="text-2xl font-bold mb-8">Related Products</h2>
+              <h2 className="text-2xl font-bold mb-8">Похожие товары</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {relatedProducts.map((product, index) => (
                   <div 

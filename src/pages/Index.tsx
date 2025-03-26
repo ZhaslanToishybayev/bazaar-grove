@@ -33,8 +33,8 @@ const Index = () => {
           <div className="container px-4 mx-auto">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold">Shop by Category</h2>
-                <p className="mt-2 text-muted-foreground">Explore our curated collections</p>
+                <h2 className="text-2xl sm:text-3xl font-bold">Категории товаров</h2>
+                <p className="mt-2 text-muted-foreground">Исследуйте наши подборки</p>
               </div>
               <Button 
                 variant="link" 
@@ -42,7 +42,7 @@ const Index = () => {
                 asChild
               >
                 <a href="/products">
-                  View all categories <ArrowRight className="ml-1 h-4 w-4" />
+                  Все категории <ArrowRight className="ml-1 h-4 w-4" />
                 </a>
               </Button>
             </div>
@@ -61,7 +61,7 @@ const Index = () => {
             <div className="mt-8 text-center md:hidden">
               <Button variant="outline" className="rounded-full" asChild>
                 <a href="/products">
-                  View all categories <ArrowRight className="ml-1 h-4 w-4" />
+                  Все категории <ArrowRight className="ml-1 h-4 w-4" />
                 </a>
               </Button>
             </div>
@@ -71,22 +71,22 @@ const Index = () => {
         {/* Benefits Section */}
         <section className="py-16">
           <div className="container px-4 mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">Why Choose Us</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">Почему выбирают нас</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
-                  title: 'Fast Delivery',
-                  description: 'Get your order delivered within 2-3 business days',
+                  title: 'Быстрая доставка',
+                  description: 'Получите заказ в течение 2-3 рабочих дней',
                   icon: '🚚'
                 },
                 {
-                  title: 'Secure Payments',
-                  description: 'We use industry-leading encryption for all transactions',
+                  title: 'Безопасные платежи',
+                  description: 'Мы используем передовое шифрование для всех транзакций',
                   icon: '🔒'
                 },
                 {
-                  title: 'Quality Guarantee',
-                  description: '30-day money-back guarantee on all purchases',
+                  title: 'Гарантия качества',
+                  description: '30-дневная гарантия возврата денег на все покупки',
                   icon: '✅'
                 }
               ].map((benefit, index) => (
@@ -107,16 +107,16 @@ const Index = () => {
         {/* Newsletter */}
         <section className="py-16 sm:py-24 bg-primary/5 rounded-3xl mx-4 sm:mx-8 my-8">
           <div className="container px-4 mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Stay Updated</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto mb-8">Subscribe to our newsletter to receive updates on new products, special offers, and more.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Будьте в курсе</h2>
+            <p className="text-muted-foreground max-w-lg mx-auto mb-8">Подпишитесь на нашу рассылку, чтобы получать обновления о новых продуктах, специальных предложениях и многом другом.</p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input 
                 type="email" 
-                placeholder="Your email address" 
+                placeholder="Ваш email адрес" 
                 className="flex h-12 w-full rounded-full border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
               <Button className="h-12 rounded-full px-6">
-                Subscribe
+                Подписаться
               </Button>
             </div>
           </div>

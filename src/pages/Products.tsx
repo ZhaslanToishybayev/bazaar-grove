@@ -30,8 +30,8 @@ const Products = () => {
       <main className="flex-grow pt-24">
         <Container>
           <div className="mb-8">
-            <h1 className="text-3xl font-bold">Products</h1>
-            <p className="text-muted-foreground mt-2">Explore our collection of premium products</p>
+            <h1 className="text-3xl font-bold">Товары</h1>
+            <p className="text-muted-foreground mt-2">Исследуйте нашу коллекцию премиум товаров</p>
           </div>
           
           <div className="flex flex-col lg:flex-row gap-8">
@@ -43,7 +43,7 @@ const Products = () => {
               >
                 <span className="flex items-center">
                   <Filter size={16} className="mr-2" />
-                  Filter Products
+                  Фильтровать товары
                 </span>
                 <ChevronDown size={16} className={`transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -51,7 +51,7 @@ const Products = () => {
               {isFilterOpen && (
                 <div className="mt-4 border border-border rounded-md p-4 bg-white">
                   <div className="mb-6">
-                    <h3 className="font-medium mb-3">Categories</h3>
+                    <h3 className="font-medium mb-3">Категории</h3>
                     <div className="space-y-2">
                       {categories.map(category => (
                         <button
@@ -66,16 +66,16 @@ const Products = () => {
                   </div>
                   
                   <div>
-                    <h3 className="font-medium mb-3">Sort By</h3>
+                    <h3 className="font-medium mb-3">Сортировка</h3>
                     <select 
                       className="w-full border border-input bg-background h-9 rounded-md px-3 text-sm"
                       value={sort}
                       onChange={(e) => setSort(e.target.value)}
                     >
-                      <option value="newest">Newest</option>
-                      <option value="price-low">Price: Low to High</option>
-                      <option value="price-high">Price: High to Low</option>
-                      <option value="rating">Top Rated</option>
+                      <option value="newest">Новинки</option>
+                      <option value="price-low">Цена: по возрастанию</option>
+                      <option value="price-high">Цена: по убыванию</option>
+                      <option value="rating">По рейтингу</option>
                     </select>
                   </div>
                 </div>
@@ -86,7 +86,7 @@ const Products = () => {
             <div className="hidden lg:block w-64 flex-shrink-0">
               <div className="sticky top-28 border border-border rounded-xl p-6 bg-white">
                 <div className="mb-6">
-                  <h3 className="font-medium mb-4">Categories</h3>
+                  <h3 className="font-medium mb-4">Категории</h3>
                   <div className="space-y-2">
                     {categories.map(category => (
                       <button
@@ -101,16 +101,16 @@ const Products = () => {
                 </div>
                 
                 <div className="mb-6">
-                  <h3 className="font-medium mb-4">Sort By</h3>
+                  <h3 className="font-medium mb-4">Сортировка</h3>
                   <select 
                     className="w-full border border-input bg-background h-9 rounded-md px-3 text-sm"
                     value={sort}
                     onChange={(e) => setSort(e.target.value)}
                   >
-                    <option value="newest">Newest</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="rating">Top Rated</option>
+                    <option value="newest">Новинки</option>
+                    <option value="price-low">Цена: по возрастанию</option>
+                    <option value="price-high">Цена: по убыванию</option>
+                    <option value="rating">По рейтингу</option>
                   </select>
                 </div>
                 
@@ -122,7 +122,7 @@ const Products = () => {
                       setSort("newest");
                     }}
                   >
-                    Reset Filters
+                    Сбросить фильтры
                   </button>
                 </div>
               </div>
@@ -132,17 +132,17 @@ const Products = () => {
             <div className="flex-grow">
               <div className="flex justify-between items-center mb-6">
                 <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">{sortedProducts.length}</span> products
+                  Показано <span className="font-medium">{sortedProducts.length}</span> товаров
                 </p>
                 <select 
                   className="hidden sm:block border border-input bg-background h-9 rounded-md px-3 text-sm"
                   value={sort}
                   onChange={(e) => setSort(e.target.value)}
                 >
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Top Rated</option>
+                  <option value="newest">Новинки</option>
+                  <option value="price-low">Цена: по возрастанию</option>
+                  <option value="price-high">Цена: по убыванию</option>
+                  <option value="rating">По рейтингу</option>
                 </select>
               </div>
               
@@ -160,7 +160,7 @@ const Products = () => {
               
               {sortedProducts.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No products found.</p>
+                  <p className="text-muted-foreground">Товары не найдены.</p>
                 </div>
               )}
             </div>

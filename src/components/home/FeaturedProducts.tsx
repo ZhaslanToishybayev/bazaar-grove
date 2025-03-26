@@ -14,14 +14,14 @@ const FeaturedProducts = () => {
       <Container>
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Featured Products</h2>
-            <p className="mt-2 text-muted-foreground">Our most popular items selected for you</p>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Популярные товары</h2>
+            <p className="mt-2 text-muted-foreground">Наши самые популярные товары, подобранные для вас</p>
           </div>
           <Link 
             to="/products" 
             className="hidden sm:flex items-center text-sm font-medium hover:text-primary transition-colors"
           >
-            View All
+            Смотреть все
             <ArrowRight size={16} className="ml-1" />
           </Link>
         </div>
@@ -43,7 +43,7 @@ const FeaturedProducts = () => {
             to="/products" 
             className="flex items-center justify-center text-sm font-medium hover:text-primary transition-colors"
           >
-            View All Products
+            Смотреть все товары
             <ArrowRight size={16} className="ml-1" />
           </Link>
         </div>

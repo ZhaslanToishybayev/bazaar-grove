@@ -22,13 +22,13 @@ const ProductCard = ({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${product.name} добавлен в корзину`);
   };
 
   const handleAddToWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toast.success(`${product.name} added to wishlist`);
+    toast.success(`${product.name} добавлен в избранное`);
   };
 
   return (
@@ -73,7 +73,7 @@ const ProductCard = ({
             size="icon"
             className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={handleAddToWishlist}
-            aria-label="Add to wishlist"
+            aria-label="Добавить в избранное"
           >
             <Heart size={16} />
           </Button>
@@ -87,7 +87,7 @@ const ProductCard = ({
           className="shadow-md rounded-full py-1 px-3 text-xs h-auto"
           onClick={handleAddToCart}
         >
-          Add to Cart
+          В корзину
         </Button>
       </div>
     </div>

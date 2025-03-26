@@ -13,13 +13,13 @@ const Footer = () => {
               BazaarGrove
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
-              Premium marketplace for unique products from around the world
+              Премиум маркетплейс для уникальных товаров со всего мира
             </p>
           </div>
           <div>
-            <h3 className="text-sm font-medium">Shop</h3>
+            <h3 className="text-sm font-medium">Магазин</h3>
             <ul className="mt-4 space-y-3">
-              {['All Products', 'New Arrivals', 'Best Sellers', 'Deals'].map(item => (
+              {['Все товары', 'Новинки', 'Бестселлеры', 'Акции'].map(item => (
                 <li key={item}>
                   <Link 
                     to="#" 
@@ -32,9 +32,9 @@ const Footer = () => {
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-medium">Company</h3>
+            <h3 className="text-sm font-medium">Компания</h3>
             <ul className="mt-4 space-y-3">
-              {['About Us', 'Careers', 'Press', 'Partners'].map(item => (
+              {['О нас', 'Карьера', 'Пресса', 'Партнеры'].map(item => (
                 <li key={item}>
                   <Link 
                     to="#" 
@@ -47,9 +47,9 @@ const Footer = () => {
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-medium">Support</h3>
+            <h3 className="text-sm font-medium">Поддержка</h3>
             <ul className="mt-4 space-y-3">
-              {['Help Center', 'Returns & Exchanges', 'Contact Us', 'FAQ'].map(item => (
+              {['Центр помощи', 'Возврат и обмен', 'Связаться с нами', 'FAQ'].map(item => (
                 <li key={item}>
                   <Link 
                     to="#" 
@@ -64,26 +64,26 @@ const Footer = () => {
         </div>
         <div className="mt-12 pt-8 border-t border-muted flex flex-col md:flex-row items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} BazaarGrove. All rights reserved.
+            © {new Date().getFullYear()} BazaarGrove. Все права защищены.
           </p>
           <div className="mt-4 md:mt-0 space-x-4">
             <Link 
               to="#" 
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
             >
-              Privacy Policy
+              Политика конфиденциальности
             </Link>
             <Link 
               to="#" 
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
             >
-              Terms of Service
+              Условия использования
             </Link>
             <Link 
               to="#" 
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
             >
-              Cookie Policy
+              Политика cookies
             </Link>
           </div>
         </div>

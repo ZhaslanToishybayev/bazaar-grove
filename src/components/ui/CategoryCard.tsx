@@ -29,7 +29,7 @@ const CategoryCard = ({ category, image, index, className }: CategoryCardProps) 
       <div className="absolute bottom-0 left-0 right-0 p-4 z-20 text-white">
         <h3 className="text-lg font-medium">{category}</h3>
         <p className="text-sm text-white/80 mt-1 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-          View collection
+          Просмотреть коллекцию
         </p>
       </div>
     </Link>
