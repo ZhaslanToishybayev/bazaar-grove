@@ -176,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       console.log('Starting Google sign in process');
       
-      const { error } = await signInWithGoogleProvider();
+      const { data, error } = await signInWithGoogleProvider();
       
       if (error) {
         console.error('Google sign in error:', error.message);
