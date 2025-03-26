@@ -45,6 +45,7 @@ const Auth = () => {
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
+      console.log("User authenticated, redirecting to home page", user);
       navigate('/', { replace: true });
     }
   }, [user, navigate]);
@@ -76,9 +77,22 @@ const Auth = () => {
       setSubmitting(true);
       console.log('Login attempt with:', values.email);
       
+      if (!values.email || !values.password) {
+        console.error('Missing email or password');
+        toast({
+          title: 'Ошибка при входе',
+          description: 'Пожалуйста, заполните все поля',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       const { success, error } = await signIn(values.email, values.password);
       
+      console.log('Login result:', success, error);
+      
       if (success) {
+        console.log('Login successful, redirecting to home page');
         navigate('/', { replace: true });
       } else if (error) {
         console.error('Login error in component:', error.message);
@@ -103,7 +117,18 @@ const Auth = () => {
       setSubmitting(true);
       console.log('Register attempt with:', values.email);
       
+      if (!values.email || !values.password) {
+        console.error('Missing email or password');
+        toast({
+          title: 'Ошибка',
+          description: 'Пожалуйста, заполните все поля',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       if (values.password !== values.passwordConfirm) {
+        console.error('Passwords do not match');
         toast({
           title: 'Ошибка',
           description: 'Пароли не совпадают',
@@ -112,16 +137,27 @@ const Auth = () => {
         return;
       }
       
-      const { success } = await signUp(values.email, values.password);
+      const { success, error } = await signUp(values.email, values.password);
+      
+      console.log('Registration result:', success, error);
       
       if (success) {
-        // Email confirmation is disabled, so redirect to home
-        toast({
-          title: 'Регистрация успешна',
-          description: 'Теперь вы можете войти в систему',
-        });
-        setIsLogin(true);
-        registerForm.reset();
+        // Email confirmation is disabled, so try to sign in automatically
+        console.log('Registration successful, trying to sign in');
+        const signInResult = await signIn(values.email, values.password);
+        
+        if (signInResult.success) {
+          console.log('Auto sign-in successful after registration');
+          navigate('/', { replace: true });
+        } else {
+          console.log('Auto sign-in failed, switching to login form');
+          toast({
+            title: 'Регистрация успешна',
+            description: 'Теперь вы можете войти в систему',
+          });
+          setIsLogin(true);
+          registerForm.reset();
+        }
       }
     } catch (error: any) {
       console.error('Registration error in component:', error);
@@ -137,6 +173,7 @@ const Auth = () => {
 
   // If the user is already logged in, redirect to the home page
   if (user && !isLoading) {
+    console.log('User is already logged in, redirecting to home');
     return <Navigate to="/" replace />;
   }
 
@@ -173,6 +210,7 @@ const Auth = () => {
                                   className="pl-10" 
                                   {...field} 
                                   autoComplete="email"
+                                  disabled={submitting || isLoading}
                                 />
                               </div>
                             </FormControl>
@@ -195,6 +233,7 @@ const Auth = () => {
                                   className="pl-10" 
                                   {...field} 
                                   autoComplete="current-password"
+                                  disabled={submitting || isLoading}
                                 />
                               </div>
                             </FormControl>
@@ -233,6 +272,7 @@ const Auth = () => {
                                   className="pl-10" 
                                   {...field} 
                                   autoComplete="email"
+                                  disabled={submitting || isLoading}
                                 />
                               </div>
                             </FormControl>
@@ -255,6 +295,7 @@ const Auth = () => {
                                   className="pl-10" 
                                   {...field} 
                                   autoComplete="new-password"
+                                  disabled={submitting || isLoading}
                                 />
                               </div>
                             </FormControl>
@@ -277,6 +318,7 @@ const Auth = () => {
                                   className="pl-10" 
                                   {...field} 
                                   autoComplete="new-password"
+                                  disabled={submitting || isLoading}
                                 />
                               </div>
                             </FormControl>
@@ -310,6 +352,7 @@ const Auth = () => {
                         className="p-0 h-auto" 
                         onClick={() => setIsLogin(false)}
                         type="button"
+                        disabled={submitting || isLoading}
                       >
                         Зарегистрироваться
                       </Button>
@@ -322,6 +365,7 @@ const Auth = () => {
                         className="p-0 h-auto" 
                         onClick={() => setIsLogin(true)}
                         type="button"
+                        disabled={submitting || isLoading}
                       >
                         Войти
                       </Button>

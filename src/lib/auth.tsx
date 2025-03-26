@@ -23,22 +23,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     console.log('Setting up auth state listener');
+    
+    // Check current session on load first
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session check error:', error.message);
+          return;
+        }
+        console.log('Initial session check:', data.session);
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      } catch (err) {
+        console.error('Error checking session:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkSession();
+    
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state change:', event, session);
-        setSession(session);
-        setUser(session?.user ?? null);
+      (event, currentSession) => {
+        console.log('Auth state change:', event, currentSession);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         setIsLoading(false);
       }
     );
-
-    // Check current session on load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
 
     return () => {
       subscription.unsubscribe();
@@ -51,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Attempting to sign in with:', email);
       
       if (!email || !password) {
+        console.error('Missing email or password');
         toast({
           title: 'Ошибка при входе',
           description: 'Пожалуйста, заполните все поля',
@@ -59,10 +74,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: new Error('Пожалуйста, заполните все поля') as AuthError, success: false };
       }
       
+      console.log('Making sign in request to Supabase...');
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email: email.trim(), 
         password 
       });
+      
+      console.log('Sign in response:', data, error);
       
       if (error) {
         console.error('Sign in error:', error.message);
@@ -70,6 +88,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = 'Неверный email или пароль';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Email не подтвержден';
         }
         
         toast({
@@ -92,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error during sign in:', error.message);
       toast({
         title: 'Ошибка при входе',
-        description: error.message,
+        description: error.message || 'Произошла неизвестная ошибка',
         variant: 'destructive',
       });
       return { error: error as AuthError, success: false };
@@ -107,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Attempting to sign up with:', email);
       
       if (!email || !password) {
+        console.error('Missing email or password');
         toast({
           title: 'Ошибка при регистрации',
           description: 'Пожалуйста, заполните все поля',
@@ -115,29 +136,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: new Error('Пожалуйста, заполните все поля') as AuthError, success: false };
       }
       
+      console.log('Making sign up request to Supabase...');
       // No email confirmation needed since it's disabled in Supabase
       const { data, error } = await supabase.auth.signUp({ 
         email: email.trim(), 
         password,
         options: {
-          emailRedirectTo: window.location.origin
+          data: {
+            email: email.trim(),
+          },
         }
       });
       
+      console.log('Sign up response:', data, error);
+      
       if (error) {
         console.error('Sign up error:', error.message);
+        let errorMessage = error.message;
+        
+        if (error.message.includes('already registered')) {
+          errorMessage = 'Этот email уже зарегистрирован';
+        }
+        
         toast({
           title: 'Ошибка при регистрации',
-          description: error.message,
+          description: errorMessage,
           variant: 'destructive',
         });
         return { error, success: false };
       }
       
-      console.log('Sign up response:', data);
-      
-      // Since confirmation is disabled, the user should be signed in immediately
+      // Since email confirmation is disabled, the user should be signed in immediately
       if (data.user) {
+        console.log('User registered successfully:', data.user);
         toast({
           title: 'Регистрация успешна',
           description: 'Вы успешно зарегистрировались',
@@ -151,10 +182,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: null, success: true };
       }
     } catch (error: any) {
-      console.error('Error during sign up:', error.message);
+      console.error('Error during sign up:', error);
       toast({
         title: 'Ошибка при регистрации',
-        description: error.message,
+        description: error.message || 'Произошла неизвестная ошибка',
         variant: 'destructive',
       });
       return { error: error as AuthError, success: false };
@@ -182,7 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error during sign out:', error.message);
       toast({
         title: 'Ошибка при выходе',
-        description: error.message,
+        description: error.message || 'Произошла неизвестная ошибка',
         variant: 'destructive',
       });
     } finally {
