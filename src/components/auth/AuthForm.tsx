@@ -24,7 +24,7 @@ const AuthForm = () => {
       setSubmitting(true);
       console.log('Starting Google sign-in process');
       
-      const { error } = await signInWithGoogle();
+      const { error, success } = await signInWithGoogle();
       
       if (error) {
         console.error('Google login error in component:', error);
