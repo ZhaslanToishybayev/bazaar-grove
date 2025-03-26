@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star, Heart } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { Product } from '@/lib/data';
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +18,19 @@ const ProductCard = ({
   className,
   imageSize = 'default' 
 }: ProductCardProps) => {
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toast.success(`${product.name} added to cart`);
+  };
+
+  const handleAddToWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toast.success(`${product.name} added to wishlist`);
+  };
+
   return (
     <div 
       className={cn(
@@ -58,9 +72,10 @@ const ProductCard = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            aria-label="Add to cart"
+            onClick={handleAddToWishlist}
+            aria-label="Add to wishlist"
           >
-            <ShoppingCart size={16} />
+            <Heart size={16} />
           </Button>
         </div>
       </div>
@@ -70,6 +85,7 @@ const ProductCard = ({
           variant="default" 
           size="sm"
           className="shadow-md rounded-full py-1 px-3 text-xs h-auto"
+          onClick={handleAddToCart}
         >
           Add to Cart
         </Button>
