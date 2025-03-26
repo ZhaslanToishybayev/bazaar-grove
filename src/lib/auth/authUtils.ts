@@ -45,10 +45,10 @@ export const signInWithGoogleProvider = async () => {
       },
     });
     
-    return { data, error };
+    return { data, error, success: !error };
   } catch (error) {
     console.error('Error in signInWithGoogleProvider:', error);
-    return { data: null, error: error as AuthError };
+    return { data: null, error: error as AuthError, success: false };
   }
 };
 

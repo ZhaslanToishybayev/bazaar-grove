@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AuthContext from './authContext';
 import { signInWithEmailAndPassword, signUpWithEmailAndPassword, signOutUser, signInWithGoogleProvider } from './authUtils';
+import { AuthContextType } from './types';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -176,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       console.log('Starting Google sign in process');
       
-      const { data, error } = await signInWithGoogleProvider();
+      const { data, error, success } = await signInWithGoogleProvider();
       
       if (error) {
         console.error('Google sign in error:', error.message);
@@ -229,8 +229,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const authContextValue: AuthContextType = {
+    user,
+    session,
+    isLoading,
+    signIn,
+    signUp,
+    signOut,
+    signInWithGoogle,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut, signInWithGoogle }}>
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );
