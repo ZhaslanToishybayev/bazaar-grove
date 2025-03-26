@@ -37,12 +37,19 @@ export const signInWithGoogleProvider = async () => {
   
   console.log('Using redirect URL:', redirectUrl);
   
-  return await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: redirectUrl,
-    },
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+      },
+    });
+    
+    return { data, error };
+  } catch (error) {
+    console.error('Error in signInWithGoogleProvider:', error);
+    return { data: null, error: error as AuthError };
+  }
 };
 
 export const getCurrentSession = async () => {

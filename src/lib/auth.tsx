@@ -11,7 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null; success: boolean }>;
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null; success: boolean }>;
   signOut: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ error: AuthError | null; success: boolean }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -214,7 +214,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: error.message,
           variant: 'destructive',
         });
+        return { error, success: false };
       }
+      
+      return { error: null, success: true };
     } catch (error: any) {
       console.error('Error during Google sign in:', error.message);
       toast({
@@ -222,6 +225,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message || 'Произошла неизвестная ошибка',
         variant: 'destructive',
       });
+      return { error: error as AuthError, success: false };
     } finally {
       setIsLoading(false);
     }
