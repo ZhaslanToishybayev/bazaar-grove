@@ -28,8 +28,15 @@ export const signOutUser = async () => {
   return await supabase.auth.signOut();
 };
 
-export const signInWithGoogleProvider = async (redirectUrl: string) => {
+export const signInWithGoogleProvider = async () => {
   console.log('Attempting to sign in with Google');
+  
+  // Get the current origin and construct the full callback URL
+  const origin = window.location.origin;
+  const redirectUrl = `${origin}/auth/callback`;
+  
+  console.log('Using redirect URL:', redirectUrl);
+  
   return await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {

@@ -174,7 +174,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     try {
       setIsLoading(true);
-      const { error } = await signInWithGoogleProvider(window.location.origin + '/auth/callback');
+      console.log('Starting Google sign in process');
+      
+      const { error } = await signInWithGoogleProvider();
       
       if (error) {
         console.error('Google sign in error:', error.message);
@@ -183,7 +185,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: error.message,
           variant: 'destructive',
         });
+        return { error, success: false };
       }
+      
+      // No need to return success here as we'll be redirected to Google
+      return { error: null, success: true };
     } catch (error: any) {
       console.error('Error during Google sign in:', error.message);
       toast({
@@ -191,6 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message || 'Произошла неизвестная ошибка',
         variant: 'destructive',
       });
+      return { error: error as AuthError, success: false };
     } finally {
       setIsLoading(false);
     }

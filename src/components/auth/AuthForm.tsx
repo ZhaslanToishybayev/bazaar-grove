@@ -7,23 +7,48 @@ import { Button } from '@/components/ui/button';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast'; 
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Handle Google login
   const handleGoogleLogin = async () => {
     if (submitting) return;
+    
     try {
       setSubmitting(true);
-      await signInWithGoogle();
-    } catch (error) {
+      console.log('Starting Google sign-in process');
+      
+      const { error } = await signInWithGoogle();
+      
+      if (error) {
+        console.error('Google login error in component:', error);
+        toast({
+          title: 'Ошибка входа через Google',
+          description: error.message || 'Произошла ошибка при входе через Google',
+          variant: 'destructive',
+        });
+      } else {
+        console.log('Google sign-in initiated, waiting for redirect');
+      }
+    } catch (error: any) {
       console.error("Google login error:", error);
+      toast({
+        title: 'Ошибка входа',
+        description: error.message || 'Произошла ошибка при входе через Google',
+        variant: 'destructive',
+      });
     } finally {
-      setSubmitting(false);
+      // We'll set submitting to false after a short delay
+      // since we're expecting to be redirected anyway
+      setTimeout(() => {
+        setSubmitting(false);
+      }, 3000);
     }
   };
 
