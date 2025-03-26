@@ -1,0 +1,283 @@
+
+import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Mail, Lock, Loader2 } from 'lucide-react';
+
+import { useAuth } from '@/lib/auth';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import Container from '@/components/ui/Container';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+
+// Схема валидации для формы входа
+const loginSchema = z.object({
+  email: z.string().email('Введите корректный email адрес'),
+  password: z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
+});
+
+// Схема валидации для формы регистрации
+const registerSchema = z.object({
+  email: z.string().email('Введите корректный email адрес'),
+  password: z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
+  passwordConfirm: z.string().min(6, 'Подтверждение пароля должно содержать минимум 6 символов'),
+}).refine((data) => data.password === data.passwordConfirm, {
+  message: "Пароли не совпадают",
+  path: ["passwordConfirm"],
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
+const Auth = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user, signIn, signUp } = useAuth();
+
+  // Если пользователь авторизован, перенаправляем на главную
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Форма для входа
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  // Форма для регистрации
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      passwordConfirm: '',
+    },
+  });
+
+  // Обработка отправки формы входа
+  const onLoginSubmit = async (values: LoginFormValues) => {
+    setIsLoading(true);
+    try {
+      await signIn(values.email, values.password);
+    } catch (error) {
+      console.error('Ошибка входа:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Обработка отправки формы регистрации
+  const onRegisterSubmit = async (values: RegisterFormValues) => {
+    setIsLoading(true);
+    try {
+      await signUp(values.email, values.password);
+      // После успешной регистрации переключаемся на форму входа
+      setIsLogin(true);
+    } catch (error) {
+      console.error('Ошибка регистрации:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-grow flex items-center justify-center py-16">
+        <Container>
+          <div className="max-w-md mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>{isLogin ? 'Вход' : 'Регистрация'}</CardTitle>
+                <CardDescription>
+                  {isLogin 
+                    ? 'Войдите в свою учетную запись, чтобы получить доступ к вашим заказам и профилю' 
+                    : 'Создайте новую учетную запись для совершения покупок'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLogin ? (
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                      <FormField
+                        control={loginForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                <Input 
+                                  placeholder="email@example.com" 
+                                  className="pl-10" 
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Пароль</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                <Input 
+                                  type="password" 
+                                  placeholder="••••••" 
+                                  className="pl-10" 
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Загрузка...
+                          </>
+                        ) : 'Войти'}
+                      </Button>
+                    </form>
+                  </Form>
+                ) : (
+                  <Form {...registerForm}>
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                <Input 
+                                  placeholder="email@example.com" 
+                                  className="pl-10" 
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Пароль</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                <Input 
+                                  type="password" 
+                                  placeholder="••••••" 
+                                  className="pl-10" 
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="passwordConfirm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Подтвердите пароль</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                <Input 
+                                  type="password" 
+                                  placeholder="••••••" 
+                                  className="pl-10" 
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Загрузка...
+                          </>
+                        ) : 'Зарегистрироваться'}
+                      </Button>
+                    </form>
+                  </Form>
+                )}
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-4">
+                <div className="text-sm text-center">
+                  {isLogin ? (
+                    <>
+                      Нет учетной записи?{' '}
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto" 
+                        onClick={() => setIsLogin(false)}
+                      >
+                        Зарегистрироваться
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      Уже есть учетная запись?{' '}
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto" 
+                        onClick={() => setIsLogin(true)}
+                      >
+                        Войти
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardFooter>
+            </Card>
+          </div>
+        </Container>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default Auth;

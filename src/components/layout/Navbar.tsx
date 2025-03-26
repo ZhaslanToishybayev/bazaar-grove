@@ -1,16 +1,27 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Search, Menu, X, User, Heart } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Search, Menu, X, User, Heart, LogOut } from 'lucide-react';
 import Container from '../ui/Container';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,10 +33,15 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    // Close mobile menu when route changes
+    // Закрытие мобильного меню при изменении маршрута
     setIsMenuOpen(false);
     setIsSearchActive(false);
   }, [location]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   const links = [
     { name: 'Главная', href: '/' },
@@ -119,13 +135,45 @@ const Navbar = () => {
               <Heart size={20} />
             </Link>
             
-            <Link 
-              to="/account"
-              aria-label="Account"
-              className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-            >
-              <User size={20} />
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="Account"
+                    className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <User size={20} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
+                  <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">{user.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">Профиль</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders">Мои заказы</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">Настройки</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Выйти</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link 
+                to="/auth"
+                aria-label="Sign In"
+                className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+              >
+                <User size={20} />
+              </Link>
+            )}
             
             <Link 
               to="/cart"
@@ -174,9 +222,29 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="pt-4 space-y-4">
-              <Link to="/account" className="flex items-center py-2 text-lg font-medium">
-                <User size={20} className="mr-2" /> Мой аккаунт
-              </Link>
+              {user ? (
+                <>
+                  <div className="py-2 text-lg font-medium">
+                    <span className="text-sm text-muted-foreground block">{user.email}</span>
+                  </div>
+                  <Link to="/profile" className="flex items-center py-2 text-lg font-medium">
+                    <User size={20} className="mr-2" /> Мой профиль
+                  </Link>
+                  <Link to="/orders" className="flex items-center py-2 text-lg font-medium">
+                    <ShoppingCart size={20} className="mr-2" /> Мои заказы
+                  </Link>
+                  <button 
+                    className="flex items-center py-2 text-lg font-medium text-destructive w-full text-left"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut size={20} className="mr-2" /> Выйти
+                  </button>
+                </>
+              ) : (
+                <Link to="/auth" className="flex items-center py-2 text-lg font-medium">
+                  <User size={20} className="mr-2" /> Войти / Зарегистрироваться
+                </Link>
+              )}
               <Link to="/wishlist" className="flex items-center py-2 text-lg font-medium">
                 <Heart size={20} className="mr-2" /> Мои желания
               </Link>
