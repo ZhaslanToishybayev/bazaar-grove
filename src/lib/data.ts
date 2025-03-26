@@ -11,6 +11,7 @@ export interface Product {
   featured?: boolean;
   rating: number;
   reviews_count: number;
+  created_at?: string; // Add this field to the interface
 }
 
 export interface Category {

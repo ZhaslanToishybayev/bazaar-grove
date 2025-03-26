@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Filter, ChevronDown } from 'lucide-react';
@@ -49,8 +48,10 @@ const Products = () => {
     if (sort === "price-low") return a.price - b.price;
     if (sort === "price-high") return b.price - a.price;
     if (sort === "rating") return b.rating - a.rating;
-    // Default: newest
-    return new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime();
+    if (a.created_at && b.created_at) {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+    return 0;
   });
 
   return (
