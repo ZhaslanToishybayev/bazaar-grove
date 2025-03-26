@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
+import { Session, User, AuthError } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -9,7 +9,7 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null; success: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -22,7 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // Установка слушателя изменений состояния авторизации
+    console.log('Setting up auth state listener');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state change:', event, session);
@@ -32,8 +32,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Проверка текущего сеанса при загрузке
+    // Check current session on load
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session);
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
@@ -47,10 +48,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log('Attempting to sign in with:', email);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Sign in error:', error.message);
+        throw error;
+      }
+      
+      toast({
+        title: 'Успешный вход',
+        description: 'Вы вошли в свою учетную запись',
+      });
     } catch (error: any) {
-      console.error('Ошибка при входе:', error.message);
+      console.error('Error during sign in:', error.message);
       toast({
         title: 'Ошибка при входе',
         description: error.message,
@@ -65,26 +76,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({ 
+      console.log('Attempting to sign up with:', email);
+      
+      // No email confirmation needed since it's disabled in Supabase
+      const { data, error } = await supabase.auth.signUp({ 
         email, 
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-        }
+        password
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Sign up error:', error.message);
+        toast({
+          title: 'Ошибка при регистрации',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return { error, success: false };
+      }
+      
+      // Since confirmation is disabled, the user should be signed in immediately
       toast({
         title: 'Регистрация успешна',
-        description: 'Проверьте вашу почту для подтверждения аккаунта.',
+        description: 'Вы успешно зарегистрировались',
       });
+      
+      return { error: null, success: true };
     } catch (error: any) {
-      console.error('Ошибка при регистрации:', error.message);
+      console.error('Error during sign up:', error.message);
       toast({
         title: 'Ошибка при регистрации',
         description: error.message,
         variant: 'destructive',
       });
-      throw error;
+      return { error, success: false };
     } finally {
       setIsLoading(false);
     }
@@ -93,10 +117,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setIsLoading(true);
+      console.log('Attempting to sign out');
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Sign out error:', error.message);
+        throw error;
+      }
+      
+      toast({
+        title: 'Вы вышли из системы',
+        description: 'Вы успешно вышли из своей учетной записи',
+      });
     } catch (error: any) {
-      console.error('Ошибка при выходе:', error.message);
+      console.error('Error during sign out:', error.message);
       toast({
         title: 'Ошибка при выходе',
         description: error.message,

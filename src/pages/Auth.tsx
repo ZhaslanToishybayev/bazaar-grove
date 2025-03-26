@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -14,14 +14,15 @@ import { Button } from '@/components/ui/button';
 import Container from '@/components/ui/Container';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { useToast } from '@/hooks/use-toast';
 
-// Схема валидации для формы входа
+// Schema for login form
 const loginSchema = z.object({
   email: z.string().email('Введите корректный email адрес'),
   password: z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
 });
 
-// Схема валидации для формы регистрации
+// Schema for registration form
 const registerSchema = z.object({
   email: z.string().email('Введите корректный email адрес'),
   password: z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
@@ -36,15 +37,19 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const { user, signIn, signUp } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
+  const { user, isLoading, signIn, signUp } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Если пользователь авторизован, перенаправляем на главную
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
 
-  // Форма для входа
+  // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -53,7 +58,7 @@ const Auth = () => {
     },
   });
 
-  // Форма для регистрации
+  // Registration form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -63,31 +68,55 @@ const Auth = () => {
     },
   });
 
-  // Обработка отправки формы входа
+  // Handle login form submission
   const onLoginSubmit = async (values: LoginFormValues) => {
-    setIsLoading(true);
+    if (submitting) return;
+    
     try {
+      setSubmitting(true);
+      console.log('Login attempt with:', values.email);
       await signIn(values.email, values.password);
     } catch (error) {
-      console.error('Ошибка входа:', error);
+      console.error('Login error in component:', error);
     } finally {
-      setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
-  // Обработка отправки формы регистрации
+  // Handle registration form submission
   const onRegisterSubmit = async (values: RegisterFormValues) => {
-    setIsLoading(true);
+    if (submitting) return;
+    
     try {
-      await signUp(values.email, values.password);
-      // После успешной регистрации переключаемся на форму входа
-      setIsLogin(true);
+      setSubmitting(true);
+      console.log('Register attempt with:', values.email);
+      
+      if (values.password !== values.passwordConfirm) {
+        toast({
+          title: 'Ошибка',
+          description: 'Пароли не совпадают',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const { error, success } = await signUp(values.email, values.password);
+      
+      if (success) {
+        // If email confirmation is disabled, we can redirect to the home page
+        navigate('/', { replace: true });
+      }
     } catch (error) {
-      console.error('Ошибка регистрации:', error);
+      console.error('Registration error in component:', error);
     } finally {
-      setIsLoading(false);
+      setSubmitting(false);
     }
   };
+
+  // If the user is already logged in, redirect to the home page
+  if (user && !isLoading) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -152,9 +181,9 @@ const Auth = () => {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={isLoading}
+                        disabled={submitting || isLoading}
                       >
-                        {isLoading ? (
+                        {submitting || isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Загрузка...
@@ -231,9 +260,9 @@ const Auth = () => {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={isLoading}
+                        disabled={submitting || isLoading}
                       >
-                        {isLoading ? (
+                        {submitting || isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Загрузка...
