@@ -3,7 +3,7 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Container from '../ui/Container';
-import Button from '../ui/Button';
+import { Button } from '../ui/button';
 
 const Hero = () => {
   return (

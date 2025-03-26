@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Star } from 'lucide-react';
-import Button from './Button';
+import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { Product } from '@/lib/data';
 
@@ -67,7 +67,7 @@ const ProductCard = ({
       
       <div className="absolute right-3 top-3 z-10 opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
         <Button 
-          variant="primary" 
+          variant="default" 
           size="sm"
           className="shadow-md rounded-full py-1 px-3 text-xs h-auto"
         >

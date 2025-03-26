@@ -5,7 +5,7 @@ import { Star, ShoppingCart, Heart, Truck, ArrowLeft, Info, MinusCircle, PlusCir
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Container from '../components/ui/Container';
-import Button from '../components/ui/Button';
+import { Button } from '../components/ui/button';
 import ProductCard from '../components/ui/ProductCard';
 import { getProductById, products } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -152,16 +152,15 @@ const ProductDetail = () => {
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button 
                         className="flex-1 rounded-full"
-                        icon={<ShoppingCart size={18} />}
+                        size="default"
                       >
-                        Add to Cart
+                        <ShoppingCart size={18} className="mr-2" /> Add to Cart
                       </Button>
                       <Button 
                         variant="outline"
                         className="rounded-full"
-                        icon={<Heart size={18} />}
                       >
-                        Save
+                        <Heart size={18} className="mr-2" /> Save
                       </Button>
                     </div>
                     
