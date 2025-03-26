@@ -12,6 +12,7 @@ import Categories from "./pages/Categories";
 import About from "./pages/About";
 import Contacts from "./pages/Contacts";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/profile" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

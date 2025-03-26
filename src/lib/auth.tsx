@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Session, User, AuthError } from '@supabase/supabase-js';
+import { Session, User, AuthError, Provider } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -11,6 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null; success: boolean }>;
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null; success: boolean }>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,7 +25,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log('Setting up auth state listener');
     
-    // Check current session on load first
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log('Auth state change:', event, currentSession);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setIsLoading(false);
+      }
+    );
+    
+    // Then check current session
     const checkSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -43,16 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     checkSession();
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log('Auth state change:', event, currentSession);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setIsLoading(false);
-      }
-    );
 
     return () => {
       subscription.unsubscribe();
@@ -194,6 +195,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      setIsLoading(true);
+      console.log('Attempting to sign in with Google');
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback',
+        },
+      });
+      
+      if (error) {
+        console.error('Google sign in error:', error.message);
+        toast({
+          title: 'Ошибка входа через Google',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error during Google sign in:', error.message);
+      toast({
+        title: 'Ошибка входа через Google',
+        description: error.message || 'Произошла неизвестная ошибка',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signOut = async () => {
     try {
       setIsLoading(true);
@@ -222,7 +255,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
