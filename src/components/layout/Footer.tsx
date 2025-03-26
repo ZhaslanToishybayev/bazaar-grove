@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
           <div className="md:col-span-1">
             <Link to="/" className="text-xl font-semibold tracking-tight">
-              BazaarGrove
+              JANA
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
               Премиум маркетплейс для уникальных товаров со всего мира
@@ -64,7 +64,7 @@ const Footer = () => {
         </div>
         <div className="mt-12 pt-8 border-t border-muted flex flex-col md:flex-row items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} BazaarGrove. Все права защищены.
+            © {new Date().getFullYear()} JANA. Все права защищены.
           </p>
           <div className="mt-4 md:mt-0 space-x-4">
             <Link 

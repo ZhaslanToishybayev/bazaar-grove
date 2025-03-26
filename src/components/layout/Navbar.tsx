@@ -28,10 +28,11 @@ const Navbar = () => {
   }, [location]);
 
   const links = [
-    { name: 'Home', href: '/' },
-    { name: 'Products', href: '/products' },
-    { name: 'Categories', href: '/categories' },
-    { name: 'About', href: '/about' },
+    { name: 'Главная', href: '/' },
+    { name: 'Товары', href: '/products' },
+    { name: 'Категории', href: '/categories' },
+    { name: 'О нас', href: '/about' },
+    { name: 'Контакты', href: '/contacts' },
   ];
 
   return (
@@ -51,7 +52,7 @@ const Navbar = () => {
             to="/"
             className="text-xl md:text-2xl font-semibold tracking-tight hover-lift"
           >
-            BazaarGrove
+            JANA
           </Link>
 
           {/* Desktop Navigation */}
@@ -80,7 +81,7 @@ const Navbar = () => {
                 <div className="flex items-center w-full">
                   <input
                     type="text"
-                    placeholder="Search for products..."
+                    placeholder="Поиск товаров..."
                     className="flex h-10 w-full rounded-l-full border border-input border-r-0 bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     autoFocus
                   />
@@ -174,13 +175,13 @@ const Navbar = () => {
             ))}
             <div className="pt-4 space-y-4">
               <Link to="/account" className="flex items-center py-2 text-lg font-medium">
-                <User size={20} className="mr-2" /> My Account
+                <User size={20} className="mr-2" /> Мой аккаунт
               </Link>
               <Link to="/wishlist" className="flex items-center py-2 text-lg font-medium">
-                <Heart size={20} className="mr-2" /> My Wishlist
+                <Heart size={20} className="mr-2" /> Мои желания
               </Link>
               <Link to="/cart" className="flex items-center py-2 text-lg font-medium">
-                <ShoppingCart size={20} className="mr-2" /> My Cart
+                <ShoppingCart size={20} className="mr-2" /> Моя корзина
               </Link>
             </div>
           </nav>
