@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Hero from '../components/home/Hero';
@@ -7,20 +7,28 @@ import FeaturedProducts from '../components/home/FeaturedProducts';
 import CategoryCard from '../components/ui/CategoryCard';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { categories } from '@/lib/data';
-
-// Category images
-const categoryImages = {
-  'Electronics': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZWxlY3Ryb25pY3N8ZW58MHx8MHx8fDA%3D',
-  'Accessories': 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fGFjY2Vzc29yaWVzfGVufDB8fDB8fHww',
-  'Home': 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG9tZSUyMGRlY29yfGVufDB8fDB8fHww',
-  'Fitness': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Zml0bmVzcyUyMGVxdWlwbWVudHxlbnwwfHwwfHx8MA%3D%3D',
-  'Stationery': 'https://images.unsplash.com/photo-1587145717214-e697da9155ec?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8c3RhdGlvbmVyeXxlbnwwfHwwfHx8MA%3D%3D'
-};
-
-const shownCategories = categories.filter(category => category !== 'All').slice(0, 4);
+import { getCategoriesWithImages, Category } from '@/lib/data';
 
 const Index = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setLoading(true);
+      try {
+        const data = await getCategoriesWithImages();
+        setCategories(data.slice(0, 4)); // Берем только первые 4 категории для отображения
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -41,26 +49,36 @@ const Index = () => {
                 className="hidden md:flex items-center mt-4 md:mt-0"
                 asChild
               >
-                <a href="/products">
+                <a href="/categories">
                   Все категории <ArrowRight className="ml-1 h-4 w-4" />
                 </a>
               </Button>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {shownCategories.map((category, index) => (
-                <CategoryCard 
-                  key={category}
-                  category={category}
-                  image={categoryImages[category] || ''}
-                  index={index}
-                />
-              ))}
-            </div>
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((index) => (
+                  <div key={index} className="animate-pulse">
+                    <div className="bg-gray-200 rounded-xl aspect-square"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {categories.map((category, index) => (
+                  <CategoryCard 
+                    key={category.id}
+                    category={category.name}
+                    image={category.image_url || ''}
+                    index={index}
+                  />
+                ))}
+              </div>
+            )}
             
             <div className="mt-8 text-center md:hidden">
               <Button variant="outline" className="rounded-full" asChild>
-                <a href="/products">
+                <a href="/categories">
                   Все категории <ArrowRight className="ml-1 h-4 w-4" />
                 </a>
               </Button>

@@ -44,7 +44,7 @@ const ProductCard = ({
       >
         <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity z-10"></div>
         <img
-          src={product.image}
+          src={product.image_url}
           alt={product.name}
           className={cn(
             "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105",

@@ -1,27 +1,56 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Filter, ChevronDown } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Container from '../components/ui/Container';
 import ProductCard from '../components/ui/ProductCard';
-import { products, categories } from '@/lib/data';
+import { getProducts, getCategories, getProductsByCategory, Product } from '@/lib/data';
 
 const Products = () => {
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const categoryParam = queryParams.get('category');
+
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState(categoryParam || "All");
   const [sort, setSort] = useState("newest");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  const filteredProducts = selectedCategory === "All" 
-    ? products 
-    : products.filter(product => product.category === selectedCategory);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const categoriesData = await getCategories();
+      setCategories(categoriesData);
+    };
+    
+    fetchCategories();
+  }, []);
   
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const productsData = await getProductsByCategory(selectedCategory);
+        setProducts(productsData);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProducts();
+  }, [selectedCategory]);
+  
+  const sortedProducts = [...products].sort((a, b) => {
     if (sort === "price-low") return a.price - b.price;
     if (sort === "price-high") return b.price - a.price;
     if (sort === "rating") return b.rating - a.rating;
     // Default: newest
-    return Number(b.id) - Number(a.id); 
+    return new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime();
   });
 
   return (
@@ -146,19 +175,31 @@ const Products = () => {
                 </select>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedProducts.map((product, index) => (
-                  <div 
-                    key={product.id}
-                    className="animate-fade-in opacity-0"
-                    style={{ animationDelay: `${0.05 * index}s` }}
-                  >
-                    <ProductCard product={product} />
-                  </div>
-                ))}
-              </div>
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((index) => (
+                    <div key={index} className="animate-pulse">
+                      <div className="bg-gray-200 aspect-square rounded-xl mb-4"></div>
+                      <div className="bg-gray-200 h-4 rounded w-3/4 mb-2"></div>
+                      <div className="bg-gray-200 h-4 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedProducts.map((product, index) => (
+                    <div 
+                      key={product.id}
+                      className="animate-fade-in opacity-0"
+                      style={{ animationDelay: `${0.05 * index}s` }}
+                    >
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
+              )}
               
-              {sortedProducts.length === 0 && (
+              {!loading && sortedProducts.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Товары не найдены.</p>
                 </div>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Truck, ArrowLeft, Info, MinusCircle, PlusCircle } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
@@ -7,14 +7,82 @@ import Footer from '../components/layout/Footer';
 import Container from '../components/ui/Container';
 import { Button } from '../components/ui/button';
 import ProductCard from '../components/ui/ProductCard';
-import { getProductById, products } from '@/lib/data';
+import { getProductById, getProductsByCategory, Product } from '@/lib/data';
 import { cn } from '@/lib/utils';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const product = getProductById(id || "");
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+      
+      setLoading(true);
+      try {
+        const productData = await getProductById(id);
+        setProduct(productData);
+        
+        if (productData && productData.category) {
+          const related = await getProductsByCategory(productData.category);
+          setRelatedProducts(related.filter(p => p.id !== id).slice(0, 4));
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProduct();
+  }, [id]);
+  
+  // If loading, show skeleton
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-24">
+          <Container>
+            <button 
+              onClick={() => navigate(-1)}
+              className="flex items-center text-sm mb-6 hover:text-primary transition-colors"
+            >
+              <ArrowLeft size={16} className="mr-1" />
+              Назад
+            </button>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+              <div className="animate-pulse">
+                <div className="aspect-square rounded-xl bg-gray-200 mb-4"></div>
+                <div className="flex gap-3">
+                  {[1, 2, 3].map((index) => (
+                    <div key={index} className="aspect-square rounded-lg bg-gray-200 w-24"></div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="animate-pulse space-y-4">
+                <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-6 bg-gray-200 rounded w-1/5"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              </div>
+            </div>
+          </Container>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
   
   // If product not found, redirect to products page
   if (!product) {
@@ -36,10 +104,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-  
-  const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
   
   const handleQuantityChange = (amount: number) => {
     const newQuantity = quantity + amount;
@@ -67,7 +131,7 @@ const ProductDetail = () => {
             <div className="animate-fade-in opacity-0" style={{ animationDelay: '0.1s' }}>
               <div className="aspect-square rounded-xl overflow-hidden bg-secondary/30 mb-4">
                 <img 
-                  src={product.image} 
+                  src={product.image_url} 
                   alt={product.name} 
                   className="w-full h-full object-cover"
                 />
@@ -79,7 +143,7 @@ const ProductDetail = () => {
                     className="aspect-square rounded-lg overflow-hidden w-24 cursor-pointer border-2 border-transparent hover:border-primary transition-colors"
                   >
                     <img 
-                      src={product.image} 
+                      src={product.image_url} 
                       alt={`${product.name} - Вид ${index}`} 
                       className="w-full h-full object-cover"
                     />
@@ -110,7 +174,7 @@ const ProductDetail = () => {
                         ))}
                       </div>
                       <span className="ml-2 text-sm text-muted-foreground">
-                        ({product.reviews} отзывов)
+                        ({product.reviews_count} отзывов)
                       </span>
                     </div>
                   </div>
