@@ -153,10 +153,10 @@ const Navbar = () => {
                     <Link to="/profile">Профиль</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/orders">Мои заказы</Link>
+                    <Link to="/profile?tab=orders">Мои заказы</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/settings">Настройки</Link>
+                    <Link to="/profile?tab=settings">Настройки</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
@@ -230,7 +230,7 @@ const Navbar = () => {
                   <Link to="/profile" className="flex items-center py-2 text-lg font-medium">
                     <User size={20} className="mr-2" /> Мой профиль
                   </Link>
-                  <Link to="/orders" className="flex items-center py-2 text-lg font-medium">
+                  <Link to="/profile?tab=orders" className="flex items-center py-2 text-lg font-medium">
                     <ShoppingCart size={20} className="mr-2" /> Мои заказы
                   </Link>
                   <button 
