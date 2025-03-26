@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null; success: boolean }>;
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null; success: boolean }>;
   signOut: () => Promise<void>;
 }
@@ -49,17 +49,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       console.log('Attempting to sign in with:', email);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (!email || !password) {
+        toast({
+          title: 'Ошибка при входе',
+          description: 'Пожалуйста, заполните все поля',
+          variant: 'destructive',
+        });
+        return { error: new Error('Пожалуйста, заполните все поля') as AuthError, success: false };
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: email.trim(), 
+        password 
+      });
       
       if (error) {
         console.error('Sign in error:', error.message);
-        throw error;
+        let errorMessage = 'Произошла ошибка при входе';
+        
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'Неверный email или пароль';
+        }
+        
+        toast({
+          title: 'Ошибка при входе',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        
+        return { error, success: false };
       }
       
+      console.log('Sign in successful:', data);
       toast({
         title: 'Успешный вход',
         description: 'Вы вошли в свою учетную запись',
       });
+      
+      return { error: null, success: true };
     } catch (error: any) {
       console.error('Error during sign in:', error.message);
       toast({
@@ -67,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message,
         variant: 'destructive',
       });
-      throw error;
+      return { error: error as AuthError, success: false };
     } finally {
       setIsLoading(false);
     }
@@ -78,10 +106,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       console.log('Attempting to sign up with:', email);
       
+      if (!email || !password) {
+        toast({
+          title: 'Ошибка при регистрации',
+          description: 'Пожалуйста, заполните все поля',
+          variant: 'destructive',
+        });
+        return { error: new Error('Пожалуйста, заполните все поля') as AuthError, success: false };
+      }
+      
       // No email confirmation needed since it's disabled in Supabase
       const { data, error } = await supabase.auth.signUp({ 
-        email, 
-        password
+        email: email.trim(), 
+        password,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
       });
       
       if (error) {
@@ -94,13 +134,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error, success: false };
       }
       
-      // Since confirmation is disabled, the user should be signed in immediately
-      toast({
-        title: 'Регистрация успешна',
-        description: 'Вы успешно зарегистрировались',
-      });
+      console.log('Sign up response:', data);
       
-      return { error: null, success: true };
+      // Since confirmation is disabled, the user should be signed in immediately
+      if (data.user) {
+        toast({
+          title: 'Регистрация успешна',
+          description: 'Вы успешно зарегистрировались',
+        });
+        return { error: null, success: true };
+      } else {
+        toast({
+          title: 'Регистрация выполнена',
+          description: 'Пожалуйста, войдите в систему',
+        });
+        return { error: null, success: true };
+      }
     } catch (error: any) {
       console.error('Error during sign up:', error.message);
       toast({
@@ -108,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message,
         variant: 'destructive',
       });
-      return { error, success: false };
+      return { error: error as AuthError, success: false };
     } finally {
       setIsLoading(false);
     }

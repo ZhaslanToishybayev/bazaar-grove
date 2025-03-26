@@ -75,9 +75,21 @@ const Auth = () => {
     try {
       setSubmitting(true);
       console.log('Login attempt with:', values.email);
-      await signIn(values.email, values.password);
-    } catch (error) {
+      
+      const { success, error } = await signIn(values.email, values.password);
+      
+      if (success) {
+        navigate('/', { replace: true });
+      } else if (error) {
+        console.error('Login error in component:', error.message);
+      }
+    } catch (error: any) {
       console.error('Login error in component:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Произошла неизвестная ошибка при входе',
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -100,14 +112,24 @@ const Auth = () => {
         return;
       }
       
-      const { error, success } = await signUp(values.email, values.password);
+      const { success } = await signUp(values.email, values.password);
       
       if (success) {
-        // If email confirmation is disabled, we can redirect to the home page
-        navigate('/', { replace: true });
+        // Email confirmation is disabled, so redirect to home
+        toast({
+          title: 'Регистрация успешна',
+          description: 'Теперь вы можете войти в систему',
+        });
+        setIsLogin(true);
+        registerForm.reset();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error in component:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Произошла неизвестная ошибка при регистрации',
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -150,6 +172,7 @@ const Auth = () => {
                                   placeholder="email@example.com" 
                                   className="pl-10" 
                                   {...field} 
+                                  autoComplete="email"
                                 />
                               </div>
                             </FormControl>
@@ -171,6 +194,7 @@ const Auth = () => {
                                   placeholder="••••••" 
                                   className="pl-10" 
                                   {...field} 
+                                  autoComplete="current-password"
                                 />
                               </div>
                             </FormControl>
@@ -183,7 +207,7 @@ const Auth = () => {
                         className="w-full" 
                         disabled={submitting || isLoading}
                       >
-                        {submitting || isLoading ? (
+                        {submitting ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Загрузка...
@@ -208,6 +232,7 @@ const Auth = () => {
                                   placeholder="email@example.com" 
                                   className="pl-10" 
                                   {...field} 
+                                  autoComplete="email"
                                 />
                               </div>
                             </FormControl>
@@ -229,6 +254,7 @@ const Auth = () => {
                                   placeholder="••••••" 
                                   className="pl-10" 
                                   {...field} 
+                                  autoComplete="new-password"
                                 />
                               </div>
                             </FormControl>
@@ -250,6 +276,7 @@ const Auth = () => {
                                   placeholder="••••••" 
                                   className="pl-10" 
                                   {...field} 
+                                  autoComplete="new-password"
                                 />
                               </div>
                             </FormControl>
@@ -262,7 +289,7 @@ const Auth = () => {
                         className="w-full" 
                         disabled={submitting || isLoading}
                       >
-                        {submitting || isLoading ? (
+                        {submitting ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Загрузка...
@@ -282,6 +309,7 @@ const Auth = () => {
                         variant="link" 
                         className="p-0 h-auto" 
                         onClick={() => setIsLogin(false)}
+                        type="button"
                       >
                         Зарегистрироваться
                       </Button>
@@ -293,6 +321,7 @@ const Auth = () => {
                         variant="link" 
                         className="p-0 h-auto" 
                         onClick={() => setIsLogin(true)}
+                        type="button"
                       >
                         Войти
                       </Button>
