@@ -12,10 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger({
-      enableEditable: false, // Отключаем значок "Edit with Lovable"
-    }),
+    mode === 'development' && componentTagger,
   ].filter(Boolean),
   resolve: {
     alias: {
