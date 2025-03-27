@@ -21,5 +21,6 @@ export default defineConfig({
   },
   define: {
     'process.env.LOVABLE_BADGE': JSON.stringify('false'),
+    '__LOVABLE_DISABLE_BADGE': 'true',
   },
 });

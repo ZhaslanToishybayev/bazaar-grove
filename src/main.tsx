@@ -10,7 +10,13 @@ declare global {
   }
 }
 
-// Явно устанавливаем значение для Lovable badge
+// Explicitly set Lovable badge to false
 window.LOVABLE_BADGE = false;
+
+// Additional attempt to disable badge (belt and suspenders approach)
+if (typeof window !== 'undefined') {
+  // @ts-ignore - force disable badge with additional method
+  window.__LOVABLE_DISABLE_BADGE = true;
+}
 
 createRoot(document.getElementById("root")!).render(<App />);
