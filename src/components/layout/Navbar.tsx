@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, Search, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Container from '@/components/ui/Container';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import CartButton from '@/components/cart/CartButton';
@@ -20,12 +19,11 @@ const navItems = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
   
-  // Scroll handler
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -35,7 +33,6 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  // Close mobile menu on route change
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
@@ -63,12 +60,10 @@ const Navbar = () => {
     )}>
       <Container>
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <Link to="/" className="text-xl font-bold flex items-center">
             StoreName
           </Link>
           
-          {/* Desktop Nav */}
           <nav className="hidden md:flex space-x-6">
             {navItems.map((item) => (
               <Link 
@@ -84,7 +79,6 @@ const Navbar = () => {
             ))}
           </nav>
           
-          {/* Right side */}
           <div className="flex items-center space-x-2">
             <Button 
               variant="ghost" 
@@ -135,7 +129,6 @@ const Navbar = () => {
               </Button>
             )}
             
-            {/* Mobile Menu Button */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -149,7 +142,6 @@ const Navbar = () => {
         </div>
       </Container>
       
-      {/* Mobile Menu */}
       {isMobile && (
         <div 
           className={cn(

@@ -1,3 +1,4 @@
 
-export { CartProvider, useCart } from './cartContext';
-export { default as CartContext } from './cartContext';
+export * from './types';
+export * from './CartProvider';
+export * from './cartContext';
