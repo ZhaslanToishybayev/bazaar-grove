@@ -12,7 +12,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    process.env.NODE_ENV === 'development' && componentTagger,
+    process.env.NODE_ENV === 'development' ? componentTagger() : null,
   ].filter(Boolean),
   resolve: {
     alias: {
