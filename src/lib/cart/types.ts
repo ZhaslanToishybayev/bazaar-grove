@@ -1,5 +1,7 @@
 
-import { Product } from '@/integrations/supabase/types';
+import { Database } from '@/integrations/supabase/types';
+
+export type Product = Database['public']['Tables']['products']['Row'];
 
 export interface CartItem {
   id: string;

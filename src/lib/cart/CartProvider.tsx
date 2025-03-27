@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { CartContext, useCartContext } from './cartContext';
+import CartContext, { useCartContext } from './cartContext';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { CartItem, CartItemWithProduct } from './types';
@@ -11,12 +10,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = React.useState(true);
   const { user } = useAuth();
   
-  // Fetch cart items when user is authenticated
   React.useEffect(() => {
     if (user) {
       fetchCartItems();
     } else {
-      // Clear cart if user is not authenticated
       setCart([]);
       setLoading(false);
     }
@@ -47,7 +44,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      // Transform the data structure to match CartItemWithProduct
       const cartItems: CartItemWithProduct[] = data.map(item => ({
         id: item.id,
         quantity: item.quantity,
@@ -75,7 +71,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  // Add item to cart
   const addItemToCart = async (productId: string, quantity: number = 1) => {
     if (!user) {
       toast({
@@ -86,14 +81,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
-      // Check if item already exists in cart
       const existingItem = cart.find(item => item.product_id === productId);
       
       if (existingItem) {
-        // Update quantity if item exists
         return await updateItemQuantity(existingItem.id, existingItem.quantity + quantity);
       } else {
-        // Get product details
         const { data: product, error: productError } = await supabase
           .from('products')
           .select('*')
@@ -102,7 +94,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (productError) throw productError;
         
-        // Add new item to cart
         const { data, error } = await supabase
           .from('cart_items')
           .insert({
@@ -115,7 +106,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (error) throw error;
         
-        // Add new item to local state
         setCart([...cart, {
           id: data.id,
           quantity: data.quantity,
@@ -141,7 +131,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  // Update item quantity
   const updateItemQuantity = async (itemId: string, quantity: number) => {
     if (!user) return false;
     
@@ -154,7 +143,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
       if (error) throw error;
       
-      // Update local state
       setCart(cart.map(item => 
         item.id === itemId ? { ...item, quantity } : item
       ));
@@ -171,7 +159,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  // Remove item from cart
   const removeItemFromCart = async (itemId: string) => {
     if (!user) return false;
     
@@ -184,7 +171,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
       if (error) throw error;
       
-      // Update local state
       setCart(cart.filter(item => item.id !== itemId));
       
       toast({
@@ -204,7 +190,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  // Clear cart
   const clearCart = async () => {
     if (!user) return false;
     
@@ -216,7 +201,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
       if (error) throw error;
       
-      // Update local state
       setCart([]);
       
       return true;
@@ -231,12 +215,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  // Calculate cart total
   const cartTotal = cart.reduce((total, item) => {
     return total + (item.product.price * item.quantity);
   }, 0);
   
-  // Calculate cart count
   const cartCount = cart.reduce((count, item) => {
     return count + item.quantity;
   }, 0);
