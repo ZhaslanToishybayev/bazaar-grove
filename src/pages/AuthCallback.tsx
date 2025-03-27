@@ -10,36 +10,42 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
         console.log('Processing OAuth callback at: ', window.location.href);
         
-        // Get URL hash parameters
+        // Get URL hash parameters and query parameters
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const errorDescription = hashParams.get('error_description');
+        const queryParams = new URLSearchParams(window.location.search);
         
-        if (errorDescription) {
-          console.error('OAuth error from URL hash:', errorDescription);
-          setError(errorDescription);
+        const errorDescription = hashParams.get('error_description') || queryParams.get('error_description');
+        const error = hashParams.get('error') || queryParams.get('error');
+        
+        if (error || errorDescription) {
+          console.error('OAuth error:', error, errorDescription);
+          setError(errorDescription || error || 'Authentication error occurred');
+          setProcessing(false);
           toast({
             title: 'Ошибка аутентификации',
-            description: errorDescription,
+            description: errorDescription || error || 'Произошла ошибка при аутентификации',
             variant: 'destructive',
           });
           return;
         }
         
         // Process the OAuth callback
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error: sessionError } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Error processing OAuth callback:', error.message);
-          setError(error.message);
+        if (sessionError) {
+          console.error('Error processing OAuth callback:', sessionError.message);
+          setError(sessionError.message);
+          setProcessing(false);
           toast({
             title: 'Ошибка аутентификации',
-            description: error.message,
+            description: sessionError.message,
             variant: 'destructive',
           });
           return;
@@ -48,6 +54,7 @@ const AuthCallback = () => {
         if (!data.session) {
           console.error('No session found after OAuth callback');
           setError('Не удалось получить сессию пользователя');
+          setProcessing(false);
           toast({
             title: 'Ошибка аутентификации',
             description: 'Не удалось получить сессию пользователя',
@@ -67,6 +74,7 @@ const AuthCallback = () => {
       } catch (error: any) {
         console.error('Error during OAuth callback:', error);
         setError(error.message || 'Произошла неизвестная ошибка');
+        setProcessing(false);
         toast({
           title: 'Ошибка аутентификации',
           description: error.message || 'Произошла неизвестная ошибка',

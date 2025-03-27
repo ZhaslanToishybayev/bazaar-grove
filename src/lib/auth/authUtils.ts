@@ -38,10 +38,15 @@ export const signInWithGoogleProvider = async () => {
   console.log('Using redirect URL:', redirectUrl);
   
   try {
+    // Make sure we explicitly set the redirectTo option
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     });
     
