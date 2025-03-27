@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -15,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
 const Checkout = () => {
-  const { cartItems, cartTotal, clearCartItems } = useCart();
+  const { cart, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -26,7 +25,7 @@ const Checkout = () => {
     // и интеграция с платежной системой
     
     toast.success('Заказ успешно оформлен!');
-    clearCartItems();
+    clearCart();
     navigate('/');
   };
   
@@ -52,7 +51,7 @@ const Checkout = () => {
     );
   }
   
-  if (cartItems.length === 0) {
+  if (!cart || cart.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -182,7 +181,7 @@ const Checkout = () => {
                 <h2 className="text-xl font-semibold mb-6">Ваш заказ</h2>
                 
                 <div className="mb-6 max-h-80 overflow-y-auto space-y-4">
-                  {cartItems.map((item) => (
+                  {cart.map((item) => (
                     <CartItem key={item.id} item={item} />
                   ))}
                 </div>

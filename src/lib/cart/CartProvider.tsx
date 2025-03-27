@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { CartContext, useCart } from './cartContext';
+import { CartContext } from './cartContext';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { CartItem, CartItemWithProduct } from './types';
@@ -201,7 +200,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  const clearCart = async () => {
+  const clearCartItems = async () => {
     if (!user) return false;
     
     try {
@@ -242,7 +241,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addItemToCart,
     updateItemQuantity,
     removeItemFromCart,
-    clearCart,
+    clearCart: clearCartItems,
     refreshCart: fetchCartItems
   };
   
@@ -253,4 +252,4 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export { useCart };
+export { useCart } from './cartContext';

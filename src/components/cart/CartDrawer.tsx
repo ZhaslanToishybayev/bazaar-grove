@@ -22,7 +22,7 @@ interface CartDrawerProps {
 }
 
 const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
-  const { cartItems, cartCount, cartTotal, isLoading, clearCartItems } = useCart();
+  const { cart, cartTotal, cartCount, loading, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -59,7 +59,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
         </DrawerHeader>
         
         <div className="flex-1 overflow-y-auto p-4">
-          {isLoading ? (
+          {loading ? (
             <div className="flex items-center justify-center h-32">
               <RefreshCw className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -68,7 +68,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
               <p className="mb-4 text-muted-foreground">Необходимо войти в систему, чтобы использовать корзину</p>
               <Button onClick={handleLogin}>Войти / Зарегистрироваться</Button>
             </div>
-          ) : cartItems.length === 0 ? (
+          ) : cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-center">
               <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">Ваша корзина пуста</p>
@@ -84,14 +84,14 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
             </div>
           ) : (
             <div className="space-y-3">
-              {cartItems.map((item) => (
+              {cart.map((item) => (
                 <CartItem key={item.id} item={item} />
               ))}
             </div>
           )}
         </div>
         
-        {cartItems.length > 0 && (
+        {cart && cart.length > 0 && (
           <DrawerFooter className="border-t">
             <div className="flex justify-between text-lg font-semibold mb-4">
               <span>Итого:</span>
@@ -99,7 +99,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
             </div>
             
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={() => clearCartItems()}>
+              <Button variant="outline" onClick={() => clearCart()}>
                 Очистить корзину
               </Button>
               <Button onClick={handleCheckout}>
