@@ -35,10 +35,10 @@ const Checkout = () => {
       // Prepare cart items for the Stripe session
       const cartItems = cart.map(item => ({
         id: item.id,
-        name: item.name,
-        price: item.price,
+        name: item.product?.name || '',
+        price: item.product?.price || 0,
         quantity: item.quantity,
-        image_url: item.image_url
+        image_url: item.product?.image_url || ''
       }));
       
       // Create Stripe checkout session
