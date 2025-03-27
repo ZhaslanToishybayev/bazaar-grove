@@ -22,5 +22,8 @@ export default defineConfig({
   define: {
     'process.env.LOVABLE_BADGE': JSON.stringify('false'),
     '__LOVABLE_DISABLE_BADGE': 'true',
+    'window.LOVABLE_BADGE': 'false',
+    'window.__LOVABLE_DISABLE_BADGE': 'true',
+    'window.HIDE_LOVABLE_EDIT_BANNER': 'true',
   },
 });
