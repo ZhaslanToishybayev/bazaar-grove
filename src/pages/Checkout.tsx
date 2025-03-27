@@ -1,7 +1,8 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, CreditCard, Truck, Info } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, Info, Loader2 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import Container from '@/components/ui/Container';
@@ -12,21 +13,62 @@ import CartItem from '@/components/cart/CartItem';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 const Checkout = () => {
   const { cart, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // В реальном проекте здесь была бы отправка заказа в базу данных
-    // и интеграция с платежной системой
+    if (!cart || cart.length === 0) {
+      toast.error('Корзина пуста');
+      return;
+    }
     
-    toast.success('Заказ успешно оформлен!');
-    clearCart();
-    navigate('/');
+    try {
+      setIsProcessing(true);
+      
+      // Prepare cart items for the Stripe session
+      const cartItems = cart.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image_url: item.image_url
+      }));
+      
+      // Create Stripe checkout session
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
+          cartItems: cartItems,
+          successUrl: `${window.location.origin}/checkout/success`,
+          cancelUrl: `${window.location.origin}/checkout`
+        }
+      });
+      
+      if (error) {
+        console.error('Error creating checkout session:', error);
+        toast.error('Ошибка при создании платежной сессии');
+        setIsProcessing(false);
+        return;
+      }
+      
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        toast.error('Не удалось создать платежную сессию');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast.error('Ошибка при обработке платежа');
+      setIsProcessing(false);
+    }
   };
   
   if (!user) {
@@ -145,31 +187,21 @@ const Checkout = () => {
                         defaultChecked 
                       />
                       <Label htmlFor="card-payment" className="flex items-center">
-                        <CreditCard className="mr-2 h-5 w-5" /> Оплата картой
+                        <CreditCard className="mr-2 h-5 w-5" /> Оплата картой через Stripe
                       </Label>
-                    </div>
-                    
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="card-number">Номер карты</Label>
-                        <Input id="card-number" placeholder="1234 5678 9012 3456" required />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry">Срок действия</Label>
-                        <Input id="expiry" placeholder="MM/YY" required />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input id="cvv" placeholder="123" required />
-                      </div>
                     </div>
                   </div>
                   
                   <div className="flex justify-end">
-                    <Button type="submit" size="lg">
-                      Оформить заказ
+                    <Button type="submit" size="lg" disabled={isProcessing}>
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Обработка...
+                        </>
+                      ) : (
+                        'Перейти к оплате'
+                      )}
                     </Button>
                   </div>
                 </form>
