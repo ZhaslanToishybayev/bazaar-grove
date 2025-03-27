@@ -22,7 +22,7 @@ interface CartDrawerProps {
 }
 
 const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
-  const { cart, cartTotal, cartCount, loading, clearCart } = useCart();
+  const { cart = [], cartTotal = 0, cartCount = 0, loading = false, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -68,7 +68,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
               <p className="mb-4 text-muted-foreground">Необходимо войти в систему, чтобы использовать корзину</p>
               <Button onClick={handleLogin}>Войти / Зарегистрироваться</Button>
             </div>
-          ) : cart.length === 0 ? (
+          ) : Array.isArray(cart) && cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-center">
               <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">Ваша корзина пуста</p>
@@ -84,14 +84,14 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
             </div>
           ) : (
             <div className="space-y-3">
-              {cart.map((item) => (
+              {Array.isArray(cart) && cart.map((item) => (
                 <CartItem key={item.id} item={item} />
               ))}
             </div>
           )}
         </div>
         
-        {cart && cart.length > 0 && (
+        {Array.isArray(cart) && cart.length > 0 && (
           <DrawerFooter className="border-t">
             <div className="flex justify-between text-lg font-semibold mb-4">
               <span>Итого:</span>
