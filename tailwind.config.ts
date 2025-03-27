@@ -99,6 +99,14 @@ export default {
         "pulse-subtle": {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.85" }
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" }
+        },
+        "float-reverse": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(10px)" }
         }
       },
       animation: {
@@ -110,7 +118,9 @@ export default {
         "slide-down": "slide-down 0.5s ease-out forwards",
         "zoom-in": "zoom-in 0.3s ease-out forwards",
         "spin-slow": "spin-slow 8s linear infinite",
-        "pulse-subtle": "pulse-subtle 3s ease-in-out infinite"
+        "pulse-subtle": "pulse-subtle 3s ease-in-out infinite",
+        "float": "float 6s ease-in-out infinite",
+        "float-reverse": "float-reverse 7s ease-in-out infinite"
       },
       fontSize: {
         "2xs": "0.625rem",

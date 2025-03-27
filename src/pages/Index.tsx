@@ -1,5 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Hero from '../components/home/Hero';
@@ -8,11 +10,12 @@ import CategoryCard from '../components/ui/CategoryCard';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { getCategoriesWithImages, Category } from '@/lib/data';
-import { motion } from 'framer-motion';
+import PromoBanner from '../components/layout/PromoBanner';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
 };
 
 const staggerContainer = {
@@ -26,8 +29,17 @@ const staggerContainer = {
 };
 
 const Index = () => {
+  const location = useLocation();
+  const { scrollY } = useScrollAnimation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const benefitsRef = useRef(null);
+  const newsletterRef = useRef(null);
+  
+  // Расчет параллакс эффектов
+  const benefitsY = useTransform(scrollY, [1000, 1500], [100, 0]);
+  const newsletterBgScale = useTransform(scrollY, [1500, 2000], [0.8, 1]);
+  const newsletterOpacity = useTransform(scrollY, [1500, 1800], [0.5, 1]);
   
   useEffect(() => {
     const fetchCategories = async () => {
@@ -48,19 +60,28 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow pt-[64px]"> {/* Добавляем отступ для фиксированного Navbar */}
+      <PromoBanner />
+      <main className="flex-grow"> {/* Убрали отступ для фиксированного Navbar, так как он будет добавлен в Hero */}
         <Hero />
         <FeaturedProducts />
         
-        {/* Categories Section */}
+        {/* Categories Section with Parallax */}
         <motion.section 
-          className="py-16 bg-secondary/50"
+          className="py-16 bg-secondary/50 relative overflow-hidden"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUp}
         >
-          <div className="container px-4 mx-auto">
+          {/* Декоративные элементы с параллакс-эффектом */}
+          <motion.div 
+            className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-primary/5 blur-3xl opacity-50"
+            style={{
+              x: useTransform(scrollY, [500, 1000], [0, -100])
+            }}
+          />
+          
+          <div className="container px-4 mx-auto relative z-10">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
               <motion.div variants={fadeInUp}>
                 <h2 className="text-2xl sm:text-3xl font-bold">Категории товаров</h2>
@@ -91,7 +112,11 @@ const Index = () => {
                 variants={staggerContainer}
               >
                 {categories.map((category, index) => (
-                  <motion.div key={category.id} variants={fadeInUp}>
+                  <motion.div 
+                    key={category.id} 
+                    variants={fadeInUp}
+                    whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                  >
                     <CategoryCard 
                       category={category.name}
                       image={category.image_url || ''}
@@ -112,15 +137,24 @@ const Index = () => {
           </div>
         </motion.section>
         
-        {/* Benefits Section */}
+        {/* Benefits Section with Parallax */}
         <motion.section 
-          className="py-16"
+          ref={benefitsRef}
+          className="py-16 relative overflow-hidden"
+          style={{ y: benefitsY }}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUp}
         >
-          <div className="container px-4 mx-auto">
+          <motion.div 
+            className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-secondary/20 opacity-30"
+            style={{
+              y: useTransform(scrollY, [800, 1200], [0, 50])
+            }}
+          />
+          
+          <div className="container px-4 mx-auto relative z-10">
             <motion.h2 variants={fadeInUp} className="text-2xl sm:text-3xl font-bold text-center mb-12">Почему выбирают нас</motion.h2>
             <motion.div 
               className="grid grid-cols-1 md:grid-cols-3 gap-8"
@@ -142,14 +176,22 @@ const Index = () => {
                   description: '30-дневная гарантия возврата денег на все покупки',
                   icon: '✅'
                 }
-              ].map((benefit) => (
+              ].map((benefit, index) => (
                 <motion.div 
                   key={benefit.title}
                   className="flex flex-col items-center text-center p-6 rounded-xl bg-white shadow-subtle hover:shadow-product transition-all duration-300"
                   variants={fadeInUp}
-                  whileHover={{ y: -5, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                  whileHover={{ y: -10, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
+                  custom={index}
                 >
-                  <div className="text-4xl mb-4">{benefit.icon}</div>
+                  <motion.div 
+                    className="text-4xl mb-4"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 + index * 0.1, duration: 0.5 }}
+                  >
+                    {benefit.icon}
+                  </motion.div>
                   <h3 className="text-lg font-medium mb-2">{benefit.title}</h3>
                   <p className="text-muted-foreground">{benefit.description}</p>
                 </motion.div>
@@ -158,29 +200,82 @@ const Index = () => {
           </div>
         </motion.section>
         
-        {/* Newsletter */}
+        {/* Newsletter with Scale Effect */}
         <motion.section 
-          className="py-16 sm:py-24 bg-primary/5 rounded-3xl mx-4 sm:mx-8 my-8"
+          ref={newsletterRef}
+          className="py-16 sm:py-24 bg-primary/5 rounded-3xl mx-4 sm:mx-8 my-8 relative overflow-hidden"
+          style={{ 
+            scale: newsletterBgScale,
+            opacity: newsletterOpacity
+          }}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUp}
         >
-          <div className="container px-4 mx-auto text-center">
-            <motion.h2 variants={fadeInUp} className="text-2xl sm:text-3xl font-bold mb-4">Будьте в курсе</motion.h2>
-            <motion.p variants={fadeInUp} className="text-muted-foreground max-w-lg mx-auto mb-8">Подпишитесь на нашу рассылку, чтобы получать обновления о новых продуктах, специальных предложениях и многом другом.</motion.p>
+          {/* Анимированные декоративные элементы */}
+          <motion.div 
+            className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/10 blur-xl"
+            animate={{ 
+              x: [0, 10, 0], 
+              y: [0, -10, 0],
+              transition: { repeat: Infinity, duration: 8, ease: "easeInOut" } 
+            }}
+          />
+          <motion.div 
+            className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-accent/10 blur-xl"
+            animate={{ 
+              x: [0, -10, 0], 
+              y: [0, 10, 0],
+              transition: { repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 } 
+            }}
+          />
+          
+          <div className="container px-4 mx-auto text-center relative z-10">
+            <motion.h2 
+              variants={fadeInUp} 
+              className="text-2xl sm:text-3xl font-bold mb-4"
+            >
+              Будьте в курсе
+            </motion.h2>
+            <motion.p 
+              variants={fadeInUp} 
+              className="text-muted-foreground max-w-lg mx-auto mb-8"
+            >
+              Подпишитесь на нашу рассылку, чтобы получать обновления о новых продуктах, специальных предложениях и многом другом.
+            </motion.p>
             <motion.div 
               variants={fadeInUp} 
               className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
+              whileInView={{ 
+                transition: {
+                  staggerChildren: 0.2
+                }
+              }}
             >
-              <input 
+              <motion.input 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
                 type="email" 
                 placeholder="Ваш email адрес" 
                 className="flex h-12 w-full rounded-full border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
-              <Button className="h-12 rounded-full px-6 hover:scale-105 transition-transform">
-                Подписаться
-              </Button>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                <Button 
+                  className="h-12 rounded-full px-6 hover:scale-105 transition-transform"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Подписаться
+                </Button>
+              </motion.div>
             </motion.div>
           </div>
         </motion.section>
