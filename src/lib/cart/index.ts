@@ -1,6 +1,7 @@
 
-// Re-export the types
+// Export types
 export * from './types';
 
-// Export the CartProvider and useCart hook but not duplicates from cartContext
-export { CartProvider, useCart } from './CartProvider';
+// Export the CartProvider and useCart hook
+export { CartProvider } from './CartProvider';
+export { useCart } from './cartContext';

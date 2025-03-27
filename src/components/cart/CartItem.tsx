@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { X, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CartItemWithProduct } from '@/lib/cart';
+import { CartItemWithProduct } from '@/lib/cart/types';
 import { useCart } from '@/lib/cart/cartContext';
 
 interface CartItemProps {

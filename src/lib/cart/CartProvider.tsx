@@ -1,5 +1,6 @@
+
 import React from 'react';
-import CartContext, { useCartContext } from './cartContext';
+import { CartContext, useCart } from './cartContext';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { CartItem, CartItemWithProduct } from './types';
@@ -37,7 +38,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             description,
             price,
             category_id,
-            image_url
+            image_url,
+            created_at,
+            updated_at,
+            rating,
+            reviews_count,
+            featured
           )
         `)
         .eq('user_id', user.id);
@@ -54,7 +60,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: item.products.description,
           price: item.products.price,
           category_id: item.products.category_id,
-          image_url: item.products.image_url
+          image_url: item.products.image_url,
+          created_at: item.products.created_at,
+          updated_at: item.products.updated_at,
+          rating: item.products.rating,
+          reviews_count: item.products.reviews_count,
+          featured: item.products.featured
         }
       }));
       
@@ -242,4 +253,4 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useCart = useCartContext;
+export { useCart };
