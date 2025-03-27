@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { X, Minus, Plus } from 'lucide-react';
+import { X, Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItemWithProduct } from '@/lib/cart/types';
 import { useCart } from '@/lib/cart/cartContext';
+import { motion } from 'framer-motion';
 
 interface CartItemProps {
   item: CartItemWithProduct;
@@ -21,13 +22,13 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
   };
   
   return (
-    <div className="flex items-center py-4 border-b">
-      <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md">
+    <div className="flex items-center py-4 border-b group hover:bg-secondary/10 transition-colors rounded-lg p-2">
+      <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-secondary/20 group-hover:shadow-md transition-all">
         <Link to={`/products/${item.product.id}`}>
           <img
             src={item.product.image_url || ''}
             alt={item.product.name}
-            className="h-full w-full object-cover object-center"
+            className="h-full w-full object-cover object-center transform group-hover:scale-110 transition-transform duration-300"
           />
         </Link>
       </div>
@@ -39,7 +40,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
               {item.product.name}
             </Link>
           </h3>
-          <p className="ml-4">${(item.product.price * item.quantity).toFixed(2)}</p>
+          <p className="ml-4 font-semibold">${(item.product.price * item.quantity).toFixed(2)}</p>
         </div>
         
         <p className="mt-1 text-sm text-muted-foreground">
@@ -47,34 +48,34 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
         </p>
         
         <div className="flex items-center justify-between text-sm mt-2">
-          <div className="flex items-center border rounded-lg overflow-hidden">
+          <div className="flex items-center border rounded-full overflow-hidden shadow-sm bg-secondary/10">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 rounded-none" 
+              className="h-8 w-8 rounded-full" 
               onClick={() => handleQuantityChange(-1)}
               disabled={item.quantity <= 1}
             >
-              <Minus size={16} />
+              <Minus size={14} />
             </Button>
-            <span className="px-3">{item.quantity}</span>
+            <span className="px-3 font-medium">{item.quantity}</span>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 rounded-none" 
+              className="h-8 w-8 rounded-full" 
               onClick={() => handleQuantityChange(1)}
             >
-              <Plus size={16} />
+              <Plus size={14} />
             </Button>
           </div>
           
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-red-500 hover:text-red-700 transition-colors" 
+            className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors rounded-full" 
             onClick={() => removeItemFromCart(item.id)}
           >
-            <X size={16} className="mr-1" /> Удалить
+            <Trash2 size={16} className="mr-1" /> Удалить
           </Button>
         </div>
       </div>
