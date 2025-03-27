@@ -1,13 +1,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Loader2, Search as SearchIcon } from 'lucide-react';
+import { Loader2, Search as SearchIcon, Filter } from 'lucide-react';
 import ProductCard from '@/components/ui/ProductCard';
 import Container from '@/components/ui/Container';
 import SearchBar from '@/components/ui/SearchBar';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/lib/data';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { highlightText } from '@/lib/highlightText';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 // Популярные поисковые запросы
 const popularSearches = [
@@ -20,6 +23,7 @@ const Search = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const { toast } = useToast();
   useDocumentTitle(`Поиск: ${query}`);
 
   useEffect(() => {
@@ -62,15 +66,63 @@ const Search = () => {
         }
         
         setProducts(data as Product[]);
+        
+        if (data.length > 0) {
+          toast({
+            title: "Найдено товаров",
+            description: `По запросу "${query}" найдено ${data.length} товаров`,
+            duration: 3000,
+          });
+        }
       } catch (error) {
         console.error('Ошибка при поиске товаров:', error);
+        toast({
+          title: "Ошибка поиска",
+          description: "Не удалось выполнить поисковый запрос",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchSearchResults();
-  }, [query]);
+  }, [query, toast]);
+
+  // Улучшенное отображение карточки продукта с подсветкой
+  const renderProductCard = (product: Product) => {
+    return (
+      <div key={product.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+        <ProductCard product={product} />
+        {(product.name.toLowerCase().includes(query.toLowerCase()) || 
+         (product.description && product.description.toLowerCase().includes(query.toLowerCase()))) && (
+          <div className="p-4 pt-0">
+            {product.name.toLowerCase().includes(query.toLowerCase()) && (
+              <p className="text-sm mb-1">
+                <span className="font-medium mr-1">Название:</span>
+                <span>{highlightText(product.name, query)}</span>
+              </p>
+            )}
+            {product.description && product.description.toLowerCase().includes(query.toLowerCase()) && (
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium mr-1">Описание:</span>
+                <span className="line-clamp-2">{highlightText(product.description, query)}</span>
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const clearRecentSearches = () => {
+    localStorage.removeItem('recentSearches');
+    setRecentSearches([]);
+    toast({
+      title: "История очищена",
+      description: "История поисковых запросов была успешно очищена",
+    });
+  };
 
   return (
     <div className="min-h-screen pb-12">
@@ -104,9 +156,7 @@ const Search = () => {
                   <div>
                     <p className="mb-6 text-muted-foreground">Найдено товаров: {products.length}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                      {products.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                      ))}
+                      {products.map(renderProductCard)}
                     </div>
                   </div>
                 ) : (
@@ -125,7 +175,16 @@ const Search = () => {
               <div className="py-8">
                 {recentSearches.length > 0 && (
                   <div className="mb-10">
-                    <h2 className="text-xl font-medium mb-4">Недавние запросы</h2>
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-medium">Недавние запросы</h2>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={clearRecentSearches}
+                      >
+                        Очистить историю
+                      </Button>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {recentSearches.map((term, index) => (
                         <a 

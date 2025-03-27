@@ -1,11 +1,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from './input';
 import { Button } from './button';
 import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
 import { cn } from '@/lib/utils';
+import { highlightText } from '@/lib/highlightText';
 
 interface SearchBarProps {
   className?: string;
@@ -23,11 +24,13 @@ const SearchBar = ({
   const navigate = useNavigate();
   const { suggestions, loading } = useSearchSuggestions(query);
   const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+      setIsFocused(false);
     }
   };
 
@@ -35,6 +38,11 @@ const SearchBar = ({
     navigate(`/search?q=${encodeURIComponent(suggestion)}`);
     setQuery(suggestion);
     setIsFocused(false);
+  };
+
+  const clearSearch = () => {
+    setQuery('');
+    inputRef.current?.focus();
   };
 
   // Обработка клика вне компонента поиска
@@ -61,21 +69,37 @@ const SearchBar = ({
       >
         <div className="relative flex-1">
           <Input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             placeholder={placeholder}
-            className={`pr-10 ${variant === 'minimal' ? 'border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted/50' : ''}`}
+            className={`${query ? 'pr-16' : 'pr-10'} ${variant === 'minimal' ? 'border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted/50' : ''}`}
           />
-          <Button 
-            type="submit" 
-            variant="ghost" 
-            size="icon" 
-            className="absolute right-0 top-0 h-full"
-          >
-            <Search size={18} />
-          </Button>
+          <div className="absolute right-0 top-0 h-full flex items-center">
+            {query && (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="h-full mr-1 opacity-70 hover:opacity-100"
+                onClick={clearSearch}
+                aria-label="Очистить поиск"
+              >
+                <X size={16} />
+              </Button>
+            )}
+            <Button 
+              type="submit" 
+              variant="ghost" 
+              size="icon" 
+              className="h-full"
+              aria-label="Поиск"
+            >
+              <Search size={18} />
+            </Button>
+          </div>
         </div>
       </form>
 
@@ -88,7 +112,7 @@ const SearchBar = ({
                 className="px-4 py-2 hover:bg-muted cursor-pointer text-sm"
                 onClick={() => handleSuggestionClick(suggestion)}
               >
-                {suggestion}
+                {highlightText(suggestion, query)}
               </li>
             ))}
           </ul>
