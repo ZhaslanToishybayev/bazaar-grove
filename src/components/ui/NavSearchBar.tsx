@@ -1,11 +1,12 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
 import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
 import { highlightText } from '@/lib/highlightText';
+import { cn } from '@/lib/utils';
 
 interface NavSearchBarProps {
   className?: string;
@@ -101,6 +102,9 @@ const NavSearchBar = ({ className = '' }: NavSearchBarProps) => {
                 className={`w-[200px] h-9 sm:w-[300px] bg-background ${searchQuery ? 'pr-16' : 'pr-10'}`}
               />
               <div className="absolute right-0 top-0 h-full flex items-center">
+                {loading && (
+                  <Loader2 size={16} className="animate-spin mr-1 text-muted-foreground" />
+                )}
                 {searchQuery && (
                   <Button 
                     type="button" 
@@ -131,17 +135,34 @@ const NavSearchBar = ({ className = '' }: NavSearchBarProps) => {
           </form>
 
           {displaySuggestions && (
-            <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border max-h-60 overflow-auto">
+            <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 rounded-md shadow-lg border max-h-60 overflow-auto">
               <ul className="py-1">
-                {suggestions.map((suggestion, index) => (
-                  <li 
-                    key={index} 
-                    className="px-4 py-2 hover:bg-muted cursor-pointer text-sm"
-                    onClick={() => handleSuggestionClick(suggestion)}
-                  >
-                    {highlightText(suggestion, searchQuery)}
-                  </li>
-                ))}
+                {suggestions.map((suggestion, index) => {
+                  // Определяем, является ли подсказка контекстом из описания (содержит "...")
+                  const isDescriptionContext = suggestion.includes('...');
+                  
+                  return (
+                    <li 
+                      key={index} 
+                      className={cn(
+                        "px-4 py-2 hover:bg-muted cursor-pointer text-sm",
+                        isDescriptionContext ? "border-l-2 border-primary/30" : ""
+                      )}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {isDescriptionContext ? (
+                        <div>
+                          <small className="text-xs text-muted-foreground mb-1 block">
+                            Найдено в описании:
+                          </small>
+                          <span className="italic">{highlightText(suggestion, searchQuery)}</span>
+                        </div>
+                      ) : (
+                        highlightText(suggestion, searchQuery)
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}

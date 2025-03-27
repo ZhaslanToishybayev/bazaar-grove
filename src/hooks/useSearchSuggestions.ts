@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { isFuzzyMatch } from '@/lib/fuzzySearch';
 
 export const useSearchSuggestions = (query: string) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -23,44 +24,71 @@ export const useSearchSuggestions = (query: string) => {
       const { data: nameData, error: nameError } = await supabase
         .from('products')
         .select('name')
-        .ilike('name', `%${query}%`)
-        .limit(5);
+        .limit(10);
 
       if (nameError) {
         throw nameError;
       }
 
-      // Если нашли меньше 5 названий, дополняем результатами из описаний
-      let descriptionData: any[] = [];
-      if (nameData.length < 5) {
-        const { data: descData, error: descError } = await supabase
-          .from('products')
-          .select('description')
-          .not('description', 'is', null)
-          .ilike('description', `%${query}%`)
-          .limit(5 - nameData.length);
+      // Получаем товары с описаниями
+      const { data: descData, error: descError } = await supabase
+        .from('products')
+        .select('description')
+        .not('description', 'is', null)
+        .limit(15);
 
-        if (descError) {
-          throw descError;
-        }
-
-        descriptionData = descData
-          .filter(item => item.description) // Убедимся, что описание не null
-          .map(item => {
-            // Получаем контекст вокруг поискового запроса
-            const desc = item.description;
-            const index = desc.toLowerCase().indexOf(query.toLowerCase());
-            const start = Math.max(0, index - 15);
-            const end = Math.min(desc.length, index + query.length + 15);
-            const context = desc.substring(start, end);
-            return context.trim() + (end < desc.length ? '...' : '');
-          });
+      if (descError) {
+        throw descError;
       }
 
-      // Объединяем результаты и удаляем дубликаты
+      // Применяем нечеткий поиск к названиям товаров
+      const matchedNames = nameData
+        .filter(item => isFuzzyMatch(item.name, query))
+        .map(item => item.name);
+
+      // Применяем нечеткий поиск к описаниям, с выделением контекста
+      const matchedDescriptions = descData
+        .filter(item => item.description && isFuzzyMatch(item.description, query))
+        .map(item => {
+          const desc = item.description;
+          // Ищем приблизительное место совпадения
+          // Сначала проверяем точное вхождение
+          let index = desc.toLowerCase().indexOf(query.toLowerCase());
+          
+          // Если точного вхождения нет, ищем по словам
+          if (index === -1) {
+            const words = desc.toLowerCase().split(/\s+/);
+            const queryWords = query.toLowerCase().split(/\s+/);
+            
+            // Ищем первое слово с близким совпадением
+            for (let i = 0; i < words.length; i++) {
+              for (const queryWord of queryWords) {
+                if (queryWord.length >= 3 && isFuzzyMatch(words[i], queryWord, 0.2)) {
+                  // Находим индекс этого слова в исходной строке
+                  const prevWordsLength = words.slice(0, i).join(' ').length;
+                  index = prevWordsLength + (i > 0 ? 1 : 0); // +1 для пробела
+                  break;
+                }
+              }
+              if (index !== -1) break;
+            }
+          }
+          
+          // Если все еще не нашли совпадения, берем начало описания
+          if (index === -1) {
+            index = 0;
+          }
+          
+          const start = Math.max(0, index - 20);
+          const end = Math.min(desc.length, index + 40);
+          const context = desc.substring(start, end);
+          return (start > 0 ? '...' : '') + context.trim() + (end < desc.length ? '...' : '');
+        });
+
+      // Объединяем результаты, сначала названия, потом описания
       const combinedResults = [
-        ...nameData.map(item => item.name),
-        ...descriptionData
+        ...matchedNames,
+        ...matchedDescriptions
       ];
       
       const uniqueSuggestions = Array.from(new Set(combinedResults));
@@ -69,13 +97,6 @@ export const useSearchSuggestions = (query: string) => {
       console.error('Ошибка при получении подсказок:', err);
       setError(err instanceof Error ? err : new Error('Неизвестная ошибка'));
       setSuggestions([]);
-      
-      // Не показываем уведомление при поиске подсказок
-      // toast({
-      //   title: "Ошибка поиска",
-      //   description: "Не удалось получить подсказки для поиска",
-      //   variant: "destructive",
-      // });
     } finally {
       setLoading(false);
     }
