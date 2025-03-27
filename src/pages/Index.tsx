@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useTransform } from 'framer-motion';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Hero from '../components/home/Hero';
@@ -36,10 +35,10 @@ const Index = () => {
   const benefitsRef = useRef(null);
   const newsletterRef = useRef(null);
   
-  // Расчет параллакс эффектов
   const benefitsY = useTransform(scrollY, [1000, 1500], [100, 0]);
   const newsletterBgScale = useTransform(scrollY, [1500, 2000], [0.8, 1]);
   const newsletterOpacity = useTransform(scrollY, [1500, 1800], [0.5, 1]);
+  const categoryBgX = useTransform(scrollY, [500, 1000], [0, -100]);
   
   useEffect(() => {
     const fetchCategories = async () => {
@@ -61,11 +60,10 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <PromoBanner />
-      <main className="flex-grow"> {/* Убрали отступ для фиксированного Navbar, так как он будет добавлен в Hero */}
+      <main className="flex-grow"> 
         <Hero />
         <FeaturedProducts />
         
-        {/* Categories Section with Parallax */}
         <motion.section 
           className="py-16 bg-secondary/50 relative overflow-hidden"
           initial="hidden"
@@ -73,11 +71,10 @@ const Index = () => {
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUp}
         >
-          {/* Декоративные элементы с параллакс-эффектом */}
           <motion.div 
             className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-primary/5 blur-3xl opacity-50"
             style={{
-              x: useTransform(scrollY, [500, 1000], [0, -100])
+              x: categoryBgX
             }}
           />
           
@@ -137,7 +134,6 @@ const Index = () => {
           </div>
         </motion.section>
         
-        {/* Benefits Section with Parallax */}
         <motion.section 
           ref={benefitsRef}
           className="py-16 relative overflow-hidden"
@@ -200,7 +196,6 @@ const Index = () => {
           </div>
         </motion.section>
         
-        {/* Newsletter with Scale Effect */}
         <motion.section 
           ref={newsletterRef}
           className="py-16 sm:py-24 bg-primary/5 rounded-3xl mx-4 sm:mx-8 my-8 relative overflow-hidden"
@@ -213,7 +208,6 @@ const Index = () => {
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUp}
         >
-          {/* Анимированные декоративные элементы */}
           <motion.div 
             className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/10 blur-xl"
             animate={{ 
@@ -269,9 +263,7 @@ const Index = () => {
                 viewport={{ once: true }}
               >
                 <Button 
-                  className="h-12 rounded-full px-6 hover:scale-105 transition-transform"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="h-12 rounded-full px-6"
                 >
                   Подписаться
                 </Button>

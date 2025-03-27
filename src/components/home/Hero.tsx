@@ -1,8 +1,7 @@
-
 import React, { useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useTransform } from 'framer-motion';
 import Container from '../ui/Container';
 import { Button } from '../ui/button';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
@@ -10,6 +9,15 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 const Hero = () => {
   const containerRef = useRef(null);
   const { scrollY } = useScrollAnimation();
+  
+  // Transform values for parallax effects
+  const imageParallax = useTransform(scrollY, [0, 500], [0, 100]);
+  const statsPanelX = useTransform(scrollY, [0, 500], [0, -50]);
+  const bgCircleY = useTransform(scrollY, [0, 500], [0, 150]);
+  const bgCircleScale = useTransform(scrollY, [0, 500], [1, 1.2]);
+  const rightBubbleY = useTransform(scrollY, [0, 500], [0, 100]);
+  const rightBubbleX = useTransform(scrollY, [0, 500], [0, -50]);
+  const leftBubbleY = useTransform(scrollY, [0, 500], [0, -80]);
   
   return (
     <section className="relative pt-20 pb-24 sm:pt-24 sm:pb-32 overflow-hidden" ref={containerRef}>
@@ -67,7 +75,7 @@ const Hero = () => {
             <motion.div 
               className="aspect-square rounded-2xl overflow-hidden"
               style={{
-                y: useTransform(scrollY, [0, 500], [0, 100]),
+                y: imageParallax,
               }}
             >
               <img 
@@ -84,7 +92,7 @@ const Hero = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.8, duration: 0.5 }}
               style={{
-                x: useTransform(scrollY, [0, 500], [0, -50]),
+                x: statsPanelX,
               }}
             >
               <div className="glass-panel py-3 px-5 rounded-xl">
@@ -101,23 +109,23 @@ const Hero = () => {
       <motion.div 
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-accent/30 blur-3xl opacity-20"
         style={{
-          y: useTransform(scrollY, [0, 500], [0, 150]),
-          scale: useTransform(scrollY, [0, 500], [1, 1.2]),
+          y: bgCircleY,
+          scale: bgCircleScale,
         }}
       />
       
       <motion.div 
         className="hidden md:block absolute top-1/4 right-[10%] w-24 h-24 rounded-full bg-primary/20 blur-2xl"
         style={{
-          y: useTransform(scrollY, [0, 500], [0, 100]),
-          x: useTransform(scrollY, [0, 500], [0, -50]),
+          y: rightBubbleY,
+          x: rightBubbleX,
         }}
       />
       
       <motion.div 
         className="hidden md:block absolute bottom-1/4 left-[10%] w-32 h-32 rounded-full bg-blue-500/20 blur-2xl"
         style={{
-          y: useTransform(scrollY, [0, 500], [0, -80]),
+          y: leftBubbleY,
         }}
       />
     </section>

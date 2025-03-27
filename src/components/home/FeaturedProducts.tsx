@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useTransform } from 'framer-motion';
 import Container from '../ui/Container';
 import ProductCard from '../ui/ProductCard';
 import { getFeaturedProducts, Product } from '@/lib/data';
@@ -13,6 +12,11 @@ const FeaturedProducts = () => {
   const [loading, setLoading] = useState(true);
   const sectionRef = useRef(null);
   const { scrollY } = useScrollAnimation();
+  
+  // Create transform values for parallax effects
+  const topBubbleY = useTransform(scrollY, [300, 1000], [0, 100]);
+  const topBubbleX = useTransform(scrollY, [300, 1000], [0, -50]);
+  const bottomBubbleY = useTransform(scrollY, [600, 1200], [0, -70]);
 
   useEffect(() => {
     const loadFeaturedProducts = async () => {
@@ -36,15 +40,15 @@ const FeaturedProducts = () => {
       <motion.div 
         className="absolute -top-32 -right-32 w-64 h-64 rounded-full bg-primary/5 opacity-70"
         style={{
-          y: useTransform(scrollY, [300, 1000], [0, 100]),
-          x: useTransform(scrollY, [300, 1000], [0, -50]),
+          y: topBubbleY,
+          x: topBubbleX,
         }}
       />
       
       <motion.div 
         className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-accent/10 opacity-70"
         style={{
-          y: useTransform(scrollY, [600, 1200], [0, -70]),
+          y: bottomBubbleY,
         }}
       />
       
