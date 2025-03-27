@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Truck, ArrowLeft, Info, MinusCircle, PlusCircle } from 'lucide-react';
@@ -9,6 +8,9 @@ import { Button } from '../components/ui/button';
 import ProductCard from '../components/ui/ProductCard';
 import { getProductById, getProductsByCategory, Product } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/lib/cart/cartContext';
+import { useAuth } from '@/lib/auth';
+import { toast } from 'sonner';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +19,8 @@ const ProductDetail = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const { addItemToCart } = useCart();
+  const { user } = useAuth();
   
   useEffect(() => {
     const fetchProduct = async () => {
@@ -41,7 +45,6 @@ const ProductDetail = () => {
     fetchProduct();
   }, [id]);
   
-  // If loading, show skeleton
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -84,7 +87,6 @@ const ProductDetail = () => {
     );
   }
   
-  // If product not found, redirect to products page
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -112,12 +114,20 @@ const ProductDetail = () => {
     }
   };
 
+  const handleAddToCart = () => {
+    if (!user) {
+      toast.error('Необходимо войти в систему, чтобы добавить товар в корзину');
+      return;
+    }
+    
+    addItemToCart(product.id, quantity);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-24">
         <Container>
-          {/* Back button */}
           <button 
             onClick={() => navigate(-1)}
             className="flex items-center text-sm mb-6 hover:text-primary transition-colors"
@@ -127,7 +137,6 @@ const ProductDetail = () => {
           </button>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-            {/* Product Images */}
             <div className="animate-fade-in opacity-0" style={{ animationDelay: '0.1s' }}>
               <div className="aspect-square rounded-xl overflow-hidden bg-secondary/30 mb-4">
                 <img 
@@ -152,7 +161,6 @@ const ProductDetail = () => {
               </div>
             </div>
             
-            {/* Product Details */}
             <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
               <div className="flex flex-col h-full">
                 <div>
@@ -189,7 +197,6 @@ const ProductDetail = () => {
                 
                 <div className="mt-8">
                   <div className="flex flex-col space-y-6">
-                    {/* Quantity selector */}
                     <div>
                       <label className="text-sm font-medium mb-2 block">Количество</label>
                       <div className="flex items-center">
@@ -212,11 +219,11 @@ const ProductDetail = () => {
                       </div>
                     </div>
                     
-                    {/* Action buttons */}
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button 
                         className="flex-1 rounded-full"
                         size="default"
+                        onClick={handleAddToCart}
                       >
                         <ShoppingCart size={18} className="mr-2" /> В корзину
                       </Button>
@@ -228,7 +235,6 @@ const ProductDetail = () => {
                       </Button>
                     </div>
                     
-                    {/* Shipping info */}
                     <div className="mt-6 bg-secondary/50 rounded-lg p-4">
                       <div className="flex items-start gap-3">
                         <Truck className="text-muted-foreground flex-shrink-0 mt-0.5" size={18} />
@@ -251,7 +257,6 @@ const ProductDetail = () => {
             </div>
           </div>
           
-          {/* Related Products */}
           {relatedProducts.length > 0 && (
             <section className="mt-24 mb-16">
               <h2 className="text-2xl font-bold mb-8">Похожие товары</h2>

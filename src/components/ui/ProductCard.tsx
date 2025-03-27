@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Star, Heart } from 'lucide-react';
@@ -6,6 +5,8 @@ import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { Product } from '@/lib/data';
 import { toast } from "sonner";
+import { useCart } from '@/lib/cart/cartContext';
+import { useAuth } from '@/lib/auth';
 
 interface ProductCardProps {
   product: Product;
@@ -18,11 +19,19 @@ const ProductCard = ({
   className,
   imageSize = 'default' 
 }: ProductCardProps) => {
+  const { addItemToCart } = useCart();
+  const { user } = useAuth();
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toast.success(`${product.name} добавлен в корзину`);
+    
+    if (!user) {
+      toast.error('Необходимо войти в систему, чтобы добавить товар в корзину');
+      return;
+    }
+    
+    addItemToCart(product.id);
   };
 
   const handleAddToWishlist = (e: React.MouseEvent) => {
