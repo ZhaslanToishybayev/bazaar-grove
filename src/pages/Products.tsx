@@ -1,48 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import Container from '@/components/ui/Container';
+import ProductCard from '@/components/ui/ProductCard';
 import { Filter, ChevronDown } from 'lucide-react';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
-import Container from '../components/ui/Container';
-import ProductCard from '../components/ui/ProductCard';
-import { getProducts, getCategories, getProductsByCategory, Product } from '@/lib/data';
+import { useCategories, useProductsByCategory } from '@/lib/data';
 
 const Products = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const categoryParam = queryParams.get('category');
-
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState(categoryParam || "All");
-  const [sort, setSort] = useState("newest");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [sort, setSort] = useState<string>("newest");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const categoriesData = await getCategories();
-      setCategories(categoriesData);
-    };
-    
-    fetchCategories();
-  }, []);
-  
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const productsData = await getProductsByCategory(selectedCategory);
-        setProducts(productsData);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchProducts();
-  }, [selectedCategory]);
+  // Используем React Query хуки для получения данных с кэшированием
+  const { data: categories = ["All"], isLoading: categoriesLoading } = useCategories();
+  const { data: products = [], isLoading: productsLoading } = useProductsByCategory(selectedCategory);
   
   const sortedProducts = [...products].sort((a, b) => {
     if (sort === "price-low") return a.price - b.price;
@@ -118,15 +89,23 @@ const Products = () => {
                 <div className="mb-6">
                   <h3 className="font-medium mb-4">Категории</h3>
                   <div className="space-y-2">
-                    {categories.map(category => (
-                      <button
-                        key={category}
-                        className={`block w-full text-left py-1.5 px-3 rounded-md text-sm ${selectedCategory === category ? 'bg-primary text-primary-foreground' : 'hover:bg-muted transition-colors'}`}
-                        onClick={() => setSelectedCategory(category)}
-                      >
-                        {category}
-                      </button>
-                    ))}
+                    {categoriesLoading ? (
+                      <div className="animate-pulse space-y-2">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="h-8 bg-gray-200 rounded-md"></div>
+                        ))}
+                      </div>
+                    ) : (
+                      categories.map(category => (
+                        <button
+                          key={category}
+                          className={`block w-full text-left py-1.5 px-3 rounded-md text-sm ${selectedCategory === category ? 'bg-primary text-primary-foreground' : 'hover:bg-muted transition-colors'}`}
+                          onClick={() => setSelectedCategory(category)}
+                        >
+                          {category}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
                 
@@ -176,7 +155,7 @@ const Products = () => {
                 </select>
               </div>
               
-              {loading ? (
+              {productsLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1, 2, 3, 4, 5, 6].map((index) => (
                     <div key={index} className="animate-pulse">
@@ -200,7 +179,7 @@ const Products = () => {
                 </div>
               )}
               
-              {!loading && sortedProducts.length === 0 && (
+              {!productsLoading && sortedProducts.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Товары не найдены.</p>
                 </div>

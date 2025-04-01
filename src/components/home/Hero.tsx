@@ -32,7 +32,7 @@ const Hero = () => {
             transition={{ duration: 0.8 }}
           >
             <span className="text-sm font-medium text-muted-foreground tracking-wider uppercase">
-              Добро пожаловать в BazaarGrove
+              Добро пожаловать в JANA
             </span>
             <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight text-balance">
               Откройте для себя премиум товары для современной жизни

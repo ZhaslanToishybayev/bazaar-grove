@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export interface Product {
   id: string;
@@ -42,6 +43,16 @@ export const getCategories = async (): Promise<string[]> => {
   }
 };
 
+// React Query хук для получения категорий
+export const useCategories = () => {
+  return useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+    staleTime: 5 * 60 * 1000, // Данные считаются актуальными в течение 5 минут
+    cacheTime: 60 * 60 * 1000, // Данные кэшируются на 1 час
+  });
+};
+
 // Функция для получения информации о категориях с изображениями
 export const getCategoriesWithImages = async (): Promise<Category[]> => {
   try {
@@ -60,6 +71,16 @@ export const getCategoriesWithImages = async (): Promise<Category[]> => {
     console.error('Error fetching categories with images:', error);
     return [];
   }
+};
+
+// React Query хук для получения категорий с изображениями
+export const useCategoriesWithImages = () => {
+  return useQuery({
+    queryKey: ['categoriesWithImages'],
+    queryFn: getCategoriesWithImages,
+    staleTime: 5 * 60 * 1000, // Данные считаются актуальными в течение 5 минут
+    cacheTime: 60 * 60 * 1000, // Данные кэшируются на 1 час
+  });
 };
 
 // Функция для получения всех продуктов
@@ -86,6 +107,16 @@ export const getProducts = async (): Promise<Product[]> => {
     console.error('Error fetching products:', error);
     return [];
   }
+};
+
+// React Query хук для получения всех продуктов
+export const useProducts = () => {
+  return useQuery({
+    queryKey: ['products'],
+    queryFn: getProducts,
+    staleTime: 2 * 60 * 1000, // Данные считаются актуальными в течение 2 минут
+    cacheTime: 30 * 60 * 1000, // Данные кэшируются на 30 минут
+  });
 };
 
 // Функция для получения избранных продуктов
@@ -115,6 +146,16 @@ export const getFeaturedProducts = async (): Promise<Product[]> => {
   }
 };
 
+// React Query хук для получения избранных продуктов
+export const useFeaturedProducts = () => {
+  return useQuery({
+    queryKey: ['featuredProducts'],
+    queryFn: getFeaturedProducts,
+    staleTime: 2 * 60 * 1000, // Данные считаются актуальными в течение 2 минут
+    cacheTime: 30 * 60 * 1000, // Данные кэшируются на 30 минут
+  });
+};
+
 // Функция для получения продукта по ID
 export const getProductById = async (id: string): Promise<Product | null> => {
   try {
@@ -140,6 +181,17 @@ export const getProductById = async (id: string): Promise<Product | null> => {
     console.error('Error fetching product by id:', error);
     return null;
   }
+};
+
+// React Query хук для получения продукта по ID
+export const useProduct = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['product', id],
+    queryFn: () => id ? getProductById(id) : null,
+    staleTime: 2 * 60 * 1000, // Данные считаются актуальными в течение 2 минут
+    cacheTime: 30 * 60 * 1000, // Данные кэшируются на 30 минут
+    enabled: !!id, // Запрос выполняется только если id определен
+  });
 };
 
 // Функция для получения продуктов по категории
@@ -171,6 +223,16 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
     console.error('Error fetching products by category:', error);
     return [];
   }
+};
+
+// React Query хук для получения продуктов по категории
+export const useProductsByCategory = (category: string) => {
+  return useQuery({
+    queryKey: ['products', 'category', category],
+    queryFn: () => getProductsByCategory(category),
+    staleTime: 2 * 60 * 1000, // Данные считаются актуальными в течение 2 минут
+    cacheTime: 30 * 60 * 1000, // Данные кэшируются на 30 минут
+  });
 };
 
 // Временные данные для использования, если загрузка из базы данных не удалась

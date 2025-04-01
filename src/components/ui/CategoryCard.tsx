@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -25,6 +24,7 @@ const CategoryCard = ({ category, image, index, className }: CategoryCardProps) 
         src={image} 
         alt={category}
         className="w-full h-full object-cover aspect-square transition-transform duration-500 group-hover:scale-105"
+        loading="lazy"
       />
       <div className="absolute bottom-0 left-0 right-0 p-4 z-20 text-white">
         <h3 className="text-lg font-medium">{category}</h3>

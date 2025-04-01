@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useRef } from 'react';
 import { motion, useTransform } from 'framer-motion';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -8,7 +7,7 @@ import FeaturedProducts from '../components/home/FeaturedProducts';
 import CategoryCard from '../components/ui/CategoryCard';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { getCategoriesWithImages, Category } from '@/lib/data';
+import { useCategoriesWithImages } from '@/lib/data';
 import PromoBanner from '../components/layout/PromoBanner';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
@@ -28,33 +27,19 @@ const staggerContainer = {
 };
 
 const Index = () => {
-  const location = useLocation();
   const { scrollY } = useScrollAnimation();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const benefitsRef = useRef(null);
   const newsletterRef = useRef(null);
+  
+  // Используем React Query для получения категорий с изображениями
+  const { data: categoriesData = [], isLoading: categoriesLoading } = useCategoriesWithImages();
+  // Берем только первые 4 категории для отображения
+  const categories = categoriesData.slice(0, 4);
   
   const benefitsY = useTransform(scrollY, [1000, 1500], [100, 0]);
   const newsletterBgScale = useTransform(scrollY, [1500, 2000], [0.8, 1]);
   const newsletterOpacity = useTransform(scrollY, [1500, 1800], [0.5, 1]);
   const categoryBgX = useTransform(scrollY, [500, 1000], [0, -100]);
-  
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setLoading(true);
-      try {
-        const data = await getCategoriesWithImages();
-        setCategories(data.slice(0, 4)); // Берем только первые 4 категории для отображения
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchCategories();
-  }, []);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -95,7 +80,7 @@ const Index = () => {
               </Button>
             </div>
             
-            {loading ? (
+            {categoriesLoading ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map((index) => (
                   <div key={index} className="animate-pulse">

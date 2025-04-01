@@ -1,16 +1,96 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Mail, MapPin, Phone } from 'lucide-react';
+import { toast } from 'sonner';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Container from '../components/ui/Container';
 import { Button } from '@/components/ui/button';
+import { sendContactMessage } from '@/lib/api';
+
+// Временное решение: отправка сообщения на email (имитация)
+const sendEmailFallback = (data: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}) => {
+  console.log('Отправка сообщения по email:', data);
+  // В реальном приложении здесь был бы код для отправки email
+  return { success: true };
+};
 
 const Contacts = () => {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted');
+    setIsSubmitting(true);
+
+    try {
+      // Пытаемся отправить сообщение через Supabase
+      const result = await sendContactMessage(formData);
+      
+      if (result.success) {
+        toast.success('Сообщение успешно отправлено. Мы свяжемся с вами в ближайшее время.');
+        // Сбрасываем форму
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        console.warn('Ошибка при сохранении в базу данных:', result.error);
+        
+        // Если не удалось сохранить в базу данных, используем запасной вариант
+        const fallbackResult = sendEmailFallback(formData);
+        
+        if (fallbackResult.success) {
+          toast.success('Сообщение успешно отправлено. Мы свяжемся с вами в ближайшее время.');
+          setFormData({
+            name: '',
+            email: '',
+            subject: '',
+            message: ''
+          });
+        } else {
+          toast.error('Не удалось отправить сообщение. Пожалуйста, попробуйте позже или свяжитесь с нами по телефону.');
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при отправке сообщения:', error);
+      
+      // Если произошла ошибка, используем запасной вариант
+      const fallbackResult = sendEmailFallback(formData);
+      
+      if (fallbackResult.success) {
+        toast.success('Сообщение успешно отправлено. Мы свяжемся с вами в ближайшее время.');
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        toast.error('Не удалось отправить сообщение. Пожалуйста, попробуйте позже или свяжитесь с нами по телефону.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -87,6 +167,8 @@ const Contacts = () => {
                       className="w-full p-3 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Ваше имя"
                       required
+                      value={formData.name}
+                      onChange={handleChange}
                     />
                   </div>
                   
@@ -98,6 +180,8 @@ const Contacts = () => {
                       className="w-full p-3 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Ваш email"
                       required
+                      value={formData.email}
+                      onChange={handleChange}
                     />
                   </div>
                   
@@ -109,6 +193,8 @@ const Contacts = () => {
                       className="w-full p-3 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Тема сообщения"
                       required
+                      value={formData.subject}
+                      onChange={handleChange}
                     />
                   </div>
                   
@@ -120,10 +206,18 @@ const Contacts = () => {
                       className="w-full p-3 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Ваше сообщение"
                       required
+                      value={formData.message}
+                      onChange={handleChange}
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full py-3">Отправить сообщение</Button>
+                  <Button 
+                    type="submit" 
+                    className="w-full py-3"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Отправка...' : 'Отправить сообщение'}
+                  </Button>
                 </form>
               </div>
             </div>

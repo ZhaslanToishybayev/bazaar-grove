@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Диагностика Stripe Webhook</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #2b2d42;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .code {
+      font-family: monospace;
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 14px;
+    }
+    button {
+      background-color: #4a63e2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background-color: #3951cc;
+    }
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .success {
+      color: #27ae60;
+      font-weight: bold;
+    }
+    .warning {
+      color: #f39c12;
+      font-weight: bold;
+    }
+    .indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    .indicator.red {
+      background-color: #e74c3c;
+    }
+    .indicator.green {
+      background-color: #27ae60;
+    }
+    .indicator.yellow {
+      background-color: #f39c12;
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: #4a63e2;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Диагностика проблем с webhook для Stripe</h1>
+    <p>Эта страница поможет диагностировать проблемы с настройкой Stripe webhook в вашем проекте.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Проверить все сразу</h2>
+      <button id="diagnoseAll">Запустить полную диагностику</button>
+      <div id="diagnosisResult"></div>
+    </div>
+
+    <div class="card">
+      <h2>Проверить подключение к Stripe</h2>
+      <p>Проверяет доступность Stripe API с использованием вашего секретного ключа.</p>
+      <button id="testStripe">Проверить Stripe</button>
+      <div id="stripeResult"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Проверить секрет webhook</h2>
+      <p>Проверяет формат и доступность webhook секрета.</p>
+      <button id="testWebhook">Проверить webhook секрет</button>
+      <div id="webhookResult"></div>
+    </div>
+
+    <div class="card">
+      <h2>Проверить Supabase</h2>
+      <p>Проверяет подключение к Supabase и наличие необходимых таблиц.</p>
+      <button id="testSupabase">Проверить Supabase</button>
+      <div id="supabaseResult"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Проверить переменные окружения</h2>
+    <p>Проверяет наличие всех необходимых переменных окружения.</p>
+    <button id="testEnv">Проверить переменные окружения</button>
+    <div id="envResult"></div>
+  </div>
+
+  <div class="card">
+    <h2>Настройка тестового окружения</h2>
+    <div class="input-group">
+      <label for="functionUrl">URL Edge Function (без /test-webhook):</label>
+      <input type="text" id="functionUrl" placeholder="https://yourproject.functions.supabase.co/create-checkout-session">
+    </div>
+    <button id="saveUrl">Сохранить URL</button>
+  </div>
+
+  <div class="card">
+    <h2>Результаты теста</h2>
+    <div id="resultOutput" class="code">Результаты будут отображены здесь...</div>
+  </div>
+
+  <script>
+    // Функция для сохранения URL в localStorage
+    function saveUrlToLocalStorage() {
+      const url = document.getElementById('functionUrl').value.trim();
+      if (!url) {
+        alert('Пожалуйста, введите URL Edge Function');
+        return;
+      }
+      
+      // Удаляем последний слеш, если он есть
+      const formattedUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+      localStorage.setItem('functionUrl', formattedUrl);
+      alert('URL сохранен: ' + formattedUrl);
+    }
+
+    // Функция для загрузки URL из localStorage
+    function loadUrlFromLocalStorage() {
+      const url = localStorage.getItem('functionUrl');
+      if (url) {
+        document.getElementById('functionUrl').value = url;
+      }
+    }
+
+    // Функция для отправки запроса к эндпоинту
+    async function sendRequest(endpoint) {
+      const baseUrl = localStorage.getItem('functionUrl');
+      if (!baseUrl) {
+        alert('Пожалуйста, сначала сохраните URL Edge Function');
+        return null;
+      }
+
+      const url = `${baseUrl}/${endpoint}`;
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Ошибка при выполнении запроса:', error);
+        return {
+          error: true,
+          message: `NetworkError: ${error.message}`,
+          details: 'Возможные причины: CORS ограничения, неверный URL, недоступность функции, или проблемы с сетью'
+        };
+      }
+    }
+
+    // Функция для отображения результатов
+    function displayResult(elementId, data, title = '') {
+      const element = document.getElementById(elementId);
+      const resultOutput = document.getElementById('resultOutput');
+      
+      // Форматируем JSON для отображения
+      const formattedJson = JSON.stringify(data, null, 2);
+      resultOutput.textContent = formattedJson;
+      
+      // Очищаем предыдущий результат
+      element.innerHTML = '';
+      
+      // Добавляем заголовок если есть
+      if (title) {
+        const titleElement = document.createElement('h3');
+        titleElement.textContent = title;
+        element.appendChild(titleElement);
+      }
+
+      // Если это ошибка сети
+      if (data.error) {
+        const errorDiv = document.createElement('div');
+        errorDiv.classList.add('error');
+        errorDiv.innerHTML = `
+          <span class="indicator red"></span> 
+          Ошибка: ${data.message}
+          <p>${data.details}</p>
+        `;
+        element.appendChild(errorDiv);
+        return;
+      }
+
+      // Обработка для полной диагностики
+      if (data.tests) {
+        // Stripe тест
+        const stripeDiv = document.createElement('div');
+        stripeDiv.classList.add(data.tests.stripe.success ? 'success' : 'error');
+        stripeDiv.innerHTML = `
+          <span class="indicator ${data.tests.stripe.success ? 'green' : 'red'}"></span> 
+          Stripe API: ${data.tests.stripe.message}
+        `;
+        element.appendChild(stripeDiv);
+
+        // Webhook тест
+        const webhookDiv = document.createElement('div');
+        webhookDiv.classList.add(data.tests.webhook.success ? 'success' : 'error');
+        webhookDiv.innerHTML = `
+          <span class="indicator ${data.tests.webhook.success ? 'green' : 'red'}"></span> 
+          Webhook Secret: ${data.tests.webhook.message}
+        `;
+        element.appendChild(webhookDiv);
+
+        // Supabase тест
+        const supabaseDiv = document.createElement('div');
+        supabaseDiv.classList.add(data.tests.supabase.success ? 'success' : 'error');
+        supabaseDiv.innerHTML = `
+          <span class="indicator ${data.tests.supabase.success ? 'green' : 'red'}"></span> 
+          Supabase: ${data.tests.supabase.message}
+        `;
+        
+        // Добавляем детали про таблицы, если они есть
+        if (data.tests.supabase.tablesExist) {
+          const tables = data.tests.supabase.tablesExist;
+          supabaseDiv.innerHTML += `
+            <ul>
+              <li>Таблица orders: ${tables.orders ? '✓' : '✗'}</li>
+              <li>Таблица order_items: ${tables.order_items ? '✓' : '✗'}</li>
+            </ul>
+          `;
+        }
+        
+        element.appendChild(supabaseDiv);
+
+        // Рекомендации
+        if (data.nextSteps && data.nextSteps.recommendations.length > 0) {
+          const recDiv = document.createElement('div');
+          recDiv.innerHTML = `
+            <h4>Рекомендации:</h4>
+            <ul>
+              ${data.nextSteps.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+          `;
+          element.appendChild(recDiv);
+        }
+        
+        return;
+      }
+
+      // Обработка для отдельных тестов
+      
+      // Проверка Stripe
+      if (data.stripe) {
+        const stripeDiv = document.createElement('div');
+        stripeDiv.classList.add(data.stripe.success ? 'success' : 'error');
+        stripeDiv.innerHTML = `
+          <span class="indicator ${data.stripe.success ? 'green' : 'red'}"></span> 
+          ${data.stripe.message}
+        `;
+        element.appendChild(stripeDiv);
+      }
+      
+      // Проверка webhook
+      if (data.webhook) {
+        const webhookDiv = document.createElement('div');
+        webhookDiv.classList.add(data.webhook.success ? 'success' : 'error');
+        webhookDiv.innerHTML = `
+          <span class="indicator ${data.webhook.success ? 'green' : 'red'}"></span> 
+          ${data.webhook.message}
+        `;
+        element.appendChild(webhookDiv);
+      }
+      
+      // Проверка Supabase
+      if (data.supabase) {
+        const supabaseDiv = document.createElement('div');
+        supabaseDiv.classList.add(data.supabase.success ? 'success' : 'error');
+        supabaseDiv.innerHTML = `
+          <span class="indicator ${data.supabase.success ? 'green' : 'red'}"></span> 
+          ${data.supabase.message}
+        `;
+        
+        // Добавляем детали про таблицы, если они есть
+        if (data.supabase.tablesExist) {
+          const tables = data.supabase.tablesExist;
+          supabaseDiv.innerHTML += `
+            <ul>
+              <li>Таблица orders: ${tables.orders ? '✓' : '✗'}</li>
+              <li>Таблица order_items: ${tables.order_items ? '✓' : '✗'}</li>
+            </ul>
+          `;
+        }
+        
+        element.appendChild(supabaseDiv);
+      }
+      
+      // Проверка переменных окружения
+      if (data.environment) {
+        const envDiv = document.createElement('div');
+        envDiv.classList.add(data.environment.complete ? 'success' : 'warning');
+        envDiv.innerHTML = `
+          <span class="indicator ${data.environment.complete ? 'green' : 'yellow'}"></span> 
+          Переменные окружения: ${data.environment.complete ? 'Все доступны' : 'Не все доступны'}
+        `;
+        
+        if (data.environment.missing && data.environment.missing.length > 0) {
+          envDiv.innerHTML += `
+            <p>Отсутствуют:</p>
+            <ul>
+              ${data.environment.missing.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+          `;
+        }
+        
+        if (data.environment.available && data.environment.available.length > 0) {
+          envDiv.innerHTML += `
+            <p>Доступны:</p>
+            <ul>
+              ${data.environment.available.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+          `;
+        }
+        
+        element.appendChild(envDiv);
+      }
+    }
+
+    // Функция для отображения индикатора загрузки
+    function showLoading(elementId) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = '<div class="loading"></div> Выполняется проверка...';
+    }
+
+    // Инициализация обработчиков событий
+    document.addEventListener('DOMContentLoaded', function() {
+      // Загружаем URL из localStorage
+      loadUrlFromLocalStorage();
+      
+      // Обработчик для сохранения URL
+      document.getElementById('saveUrl').addEventListener('click', saveUrlToLocalStorage);
+      
+      // Обработчик для полной диагностики
+      document.getElementById('diagnoseAll').addEventListener('click', async function() {
+        showLoading('diagnosisResult');
+        const data = await sendRequest('diagnose');
+        displayResult('diagnosisResult', data, 'Результаты полной диагностики:');
+      });
+      
+      // Обработчик для проверки Stripe
+      document.getElementById('testStripe').addEventListener('click', async function() {
+        showLoading('stripeResult');
+        const data = await sendRequest('test-stripe');
+        displayResult('stripeResult', data, 'Результаты проверки Stripe:');
+      });
+      
+      // Обработчик для проверки webhook
+      document.getElementById('testWebhook').addEventListener('click', async function() {
+        showLoading('webhookResult');
+        const data = await sendRequest('test-webhook');
+        displayResult('webhookResult', data, 'Результаты проверки webhook:');
+      });
+      
+      // Обработчик для проверки Supabase
+      document.getElementById('testSupabase').addEventListener('click', async function() {
+        showLoading('supabaseResult');
+        const data = await sendRequest('test-supabase');
+        displayResult('supabaseResult', data, 'Результаты проверки Supabase:');
+      });
+      
+      // Обработчик для проверки переменных окружения
+      document.getElementById('testEnv').addEventListener('click', async function() {
+        showLoading('envResult');
+        const data = await sendRequest('test-env');
+        displayResult('envResult', data, 'Результаты проверки переменных окружения:');
+      });
+    });
+  </script>
+</body>
+</html> 

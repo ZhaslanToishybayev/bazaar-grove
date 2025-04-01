@@ -1,180 +1,162 @@
-
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
-import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
-import { highlightText } from '@/lib/highlightText';
 import { cn } from '@/lib/utils';
+import { getProducts, Product } from '@/lib/data';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
-interface NavSearchBarProps {
-  className?: string;
-}
-
-const NavSearchBar = ({ className = '' }: NavSearchBarProps) => {
-  const [isExpanded, setIsExpanded] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [showSuggestions, setShowSuggestions] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
+const NavSearchBar = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { suggestions, loading } = useSearchSuggestions(searchQuery);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-      setIsExpanded(false);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    navigate(`/search?q=${encodeURIComponent(suggestion)}`);
-    setSearchQuery('');
-    setIsExpanded(false);
-    setShowSuggestions(false);
-  };
-
-  const toggleSearch = () => {
-    setIsExpanded(!isExpanded);
-    // Фокус на инпуте при открытии
-    if (!isExpanded) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    } else {
-      setShowSuggestions(false);
-    }
-  };
-
-  const clearSearch = () => {
-    setSearchQuery('');
-    inputRef.current?.focus();
-  };
-
-  // Обработка клика вне компонента поиска
+  
+  useClickOutside(searchContainerRef, () => {
+    setIsOpen(false);
+    setIsFocused(false);
+  });
+  
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const data = await getProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products for search:', error);
+      } finally {
+        setLoading(false);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    
+    fetchProducts();
   }, []);
-
-  // Закрытие поиска при нажатии Escape
+  
   useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isExpanded) {
-        setIsExpanded(false);
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscapeKey);
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [isExpanded]);
-
-  const displaySuggestions = showSuggestions && suggestions.length > 0 && searchQuery.length >= 2;
-
+    if (searchTerm.trim() === '') {
+      setFilteredProducts([]);
+      return;
+    }
+    
+    const term = searchTerm.toLowerCase().trim();
+    const results = products
+      .filter(product => 
+        product.name.toLowerCase().includes(term) || 
+        product.description.toLowerCase().includes(term) ||
+        (product.category && product.category.toLowerCase().includes(term))
+      )
+      .slice(0, 5); // Ограничиваем до 5 результатов для лучшего UX
+    
+    setFilteredProducts(results);
+  }, [searchTerm, products]);
+  
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const regex = new RegExp(`(${query.trim()})`, 'gi');
+    return text.replace(regex, '<mark class="bg-primary/20 text-primary font-medium">$1</mark>');
+  };
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim() !== '') {
+      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm('');
+      setIsOpen(false);
+    }
+  };
+  
+  const handleProductClick = (productId: string) => {
+    navigate(`/products/${productId}`);
+    setSearchTerm('');
+    setIsOpen(false);
+  };
+  
   return (
-    <div ref={searchRef} className={`relative ${className}`}>
-      {isExpanded ? (
-        <div className="animate-in fade-in duration-300">
-          <form onSubmit={handleSubmit} className="flex items-center">
-            <div className="relative">
-              <Input
-                ref={inputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
-                placeholder="Поиск товаров..."
-                className={`w-[200px] h-9 sm:w-[300px] bg-background ${searchQuery ? 'pr-16' : 'pr-10'}`}
-              />
-              <div className="absolute right-0 top-0 h-full flex items-center">
-                {loading && (
-                  <Loader2 size={16} className="animate-spin mr-1 text-muted-foreground" />
-                )}
-                {searchQuery && (
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-full mr-1 opacity-70 hover:opacity-100 p-1"
-                    onClick={clearSearch}
-                    aria-label="Очистить поиск"
-                  >
-                    <X size={14} />
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setIsExpanded(false);
-                    setShowSuggestions(false);
-                  }}
-                  className="h-full p-1 text-muted-foreground hover:text-foreground"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Закрыть поиск"
-                >
-                  <X size={18} />
-                </Button>
-              </div>
-            </div>
-          </form>
-
-          {displaySuggestions && (
-            <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 rounded-md shadow-lg border max-h-60 overflow-auto">
-              <ul className="py-1">
-                {suggestions.map((suggestion, index) => {
-                  // Определяем, является ли подсказка контекстом из описания (содержит "...")
-                  const isDescriptionContext = suggestion.includes('...');
-                  
-                  return (
-                    <li 
-                      key={index} 
-                      className={cn(
-                        "px-4 py-2 hover:bg-muted cursor-pointer text-sm",
-                        isDescriptionContext ? "border-l-2 border-primary/30" : ""
-                      )}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {isDescriptionContext ? (
-                        <div>
-                          <small className="text-xs text-muted-foreground mb-1 block">
-                            Найдено в описании:
-                          </small>
-                          <span className="italic">{highlightText(suggestion, searchQuery)}</span>
-                        </div>
-                      ) : (
-                        highlightText(suggestion, searchQuery)
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+    <div ref={searchContainerRef} className="relative w-full max-w-sm">
+      <form onSubmit={handleSearch} className="relative">
+        <Input
+          type="search"
+          placeholder="Поиск товаров..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setIsOpen(e.target.value.trim() !== '');
+          }}
+          onFocus={() => setIsFocused(true)}
+          className={cn(
+            "pr-10 w-full transition-all bg-secondary/50 focus-visible:bg-background",
+            isFocused && "border-primary shadow-sm"
           )}
-        </div>
-      ) : (
-        <button
-          onClick={toggleSearch}
-          className="p-2 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
-          aria-label="Открыть поиск"
+        />
+        <Button 
+          type="submit" 
+          variant="ghost" 
+          size="icon" 
+          className="absolute right-0 top-0 h-full px-3"
         >
-          <Search size={20} />
-        </button>
+          <Search className="h-4 w-4" />
+        </Button>
+      </form>
+      
+      {isOpen && filteredProducts.length > 0 && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-80 overflow-auto rounded-md border bg-popover shadow-lg animate-in fade-in-0 zoom-in-95">
+          <div className="py-1">
+            {filteredProducts.map((product) => (
+              <div
+                key={product.id}
+                onClick={() => handleProductClick(product.id)}
+                className="flex items-start gap-3 px-3 py-2 hover:bg-accent cursor-pointer"
+              >
+                <div className="h-10 w-10 flex-shrink-0 rounded-md overflow-hidden border">
+                  <img 
+                    src={product.image_url} 
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p 
+                    className="text-sm font-medium truncate"
+                    dangerouslySetInnerHTML={{ 
+                      __html: highlightMatch(product.name, searchTerm) 
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">{product.category}</p>
+                  <p className="text-xs font-semibold mt-1">${product.price.toFixed(2)}</p>
+                </div>
+              </div>
+            ))}
+            <div className="px-3 py-2 border-t">
+              <Button
+                variant="ghost"
+                className="w-full text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+                  setSearchTerm('');
+                  setIsOpen(false);
+                }}
+              >
+                Все результаты для "{searchTerm}"
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {isOpen && searchTerm.trim() !== '' && filteredProducts.length === 0 && !loading && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-md border bg-popover shadow-lg animate-in fade-in-0 zoom-in-95">
+          <div className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">Ничего не найдено для "{searchTerm}"</p>
+          </div>
+        </div>
       )}
     </div>
   );

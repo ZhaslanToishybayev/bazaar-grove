@@ -1,80 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, ShoppingCart, Heart, Truck, ArrowLeft, Info, MinusCircle, PlusCircle } from 'lucide-react';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
-import Container from '../components/ui/Container';
-import { Button } from '../components/ui/button';
-import ProductCard from '../components/ui/ProductCard';
-import { getProductById, getProductsByCategory, Product } from '@/lib/data';
+import { 
+  Star, 
+  Truck, 
+  Info, 
+  ShoppingCart, 
+  Heart, 
+  ArrowLeft,
+  PlusCircle,
+  MinusCircle
+} from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useProduct } from '@/lib/data';
 import { useCart } from '@/lib/cart/cartContext';
 import { useAuth } from '@/lib/auth';
-import { toast } from 'sonner';
+import { useWishlist } from '@/lib/wishlist/wishlistContext';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import Container from '@/components/ui/Container';
+import { Button } from '@/components/ui/button';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const { addItemToCart } = useCart();
+  
   const { user } = useAuth();
+  const { addItemToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   
-  useEffect(() => {
-    const fetchProduct = async () => {
-      if (!id) return;
-      
-      setLoading(true);
-      try {
-        const productData = await getProductById(id);
-        setProduct(productData);
-        
-        if (productData && productData.category) {
-          const related = await getProductsByCategory(productData.category);
-          setRelatedProducts(related.filter(p => p.id !== id).slice(0, 4));
-        }
-      } catch (error) {
-        console.error('Error fetching product:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchProduct();
-  }, [id]);
+  // Используем React Query для получения данных о продукте
+  const { data: product, isLoading, error } = useProduct(id);
   
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow pt-24">
           <Container>
-            <button 
-              onClick={() => navigate(-1)}
-              className="flex items-center text-sm mb-6 hover:text-primary transition-colors"
-            >
-              <ArrowLeft size={16} className="mr-1" />
-              Назад
-            </button>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-              <div className="animate-pulse">
-                <div className="aspect-square rounded-xl bg-gray-200 mb-4"></div>
-                <div className="flex gap-3">
-                  {[1, 2, 3].map((index) => (
-                    <div key={index} className="aspect-square rounded-lg bg-gray-200 w-24"></div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="animate-pulse space-y-4">
-                <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/5"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-24 mb-6"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="aspect-square bg-gray-200 rounded-xl"></div>
+                <div className="space-y-4">
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/4"></div>
                   <div className="h-4 bg-gray-200 rounded"></div>
                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                 </div>
@@ -87,7 +58,7 @@ const ProductDetail = () => {
     );
   }
   
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -114,6 +85,8 @@ const ProductDetail = () => {
     }
   };
 
+  const isWishlisted = isInWishlist(id || '');
+  
   const handleAddToCart = () => {
     if (!user) {
       toast.error('Необходимо войти в систему, чтобы добавить товар в корзину');
@@ -121,6 +94,19 @@ const ProductDetail = () => {
     }
     
     addItemToCart(product.id, quantity);
+  };
+
+  const handleAddToWishlist = () => {
+    if (!user) {
+      toast.error('Необходимо войти в систему, чтобы добавить товар в избранное');
+      return;
+    }
+    
+    if (isWishlisted) {
+      removeFromWishlist(id || '');
+    } else {
+      addToWishlist(id || '');
+    }
   };
 
   return (
@@ -143,6 +129,7 @@ const ProductDetail = () => {
                   src={product.image_url} 
                   alt={product.name} 
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               </div>
               <div className="flex gap-3">
@@ -155,6 +142,7 @@ const ProductDetail = () => {
                       src={product.image_url} 
                       alt={`${product.name} - Вид ${index}`} 
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </div>
                 ))}
@@ -228,10 +216,12 @@ const ProductDetail = () => {
                         <ShoppingCart size={18} className="mr-2" /> В корзину
                       </Button>
                       <Button 
-                        variant="outline"
+                        variant={isWishlisted ? "secondary" : "outline"}
                         className="rounded-full"
+                        onClick={handleAddToWishlist}
                       >
-                        <Heart size={18} className="mr-2" /> Сохранить
+                        <Heart size={18} className={cn("mr-2", isWishlisted ? "fill-primary text-primary" : "")} /> 
+                        {isWishlisted ? 'В избранном' : 'В избранное'}
                       </Button>
                     </div>
                     
@@ -257,22 +247,7 @@ const ProductDetail = () => {
             </div>
           </div>
           
-          {relatedProducts.length > 0 && (
-            <section className="mt-24 mb-16">
-              <h2 className="text-2xl font-bold mb-8">Похожие товары</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {relatedProducts.map((product, index) => (
-                  <div 
-                    key={product.id}
-                    className="animate-fade-in opacity-0"
-                    style={{ animationDelay: `${0.1 + index * 0.1}s` }}
-                  >
-                    <ProductCard product={product} />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          {/* Можно добавить здесь дополнительные секции, такие как "Похожие товары" или "Отзывы" */}
         </Container>
       </main>
       <Footer />

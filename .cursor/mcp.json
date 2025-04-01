@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "Github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@smithery-ai/github",
+        "--client",
+        "cursor",
+        "--config",
+        "\"{\\\"githubPersonalAccessToken\\\":\\\"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\\\"}\""
+      ]
+    },
+    "FIGMA": {
+      "url": "http://localhost:3333/sse"
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres"
+      ],
+      "connection-string": "postgresql://postgres.ympmrjgolzuligsadfyh:180308tjN@aws-0-eu-central-1.pooler.supabase.com:6543/postgres"
+    }
+  }
+} 

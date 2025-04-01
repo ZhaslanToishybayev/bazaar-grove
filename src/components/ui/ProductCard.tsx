@@ -7,6 +7,7 @@ import { Product } from '@/lib/data';
 import { toast } from "sonner";
 import { useCart } from '@/lib/cart/cartContext';
 import { useAuth } from '@/lib/auth';
+import { useWishlist } from '@/lib/wishlist/wishlistContext';
 
 interface ProductCardProps {
   product: Product;
@@ -21,6 +22,9 @@ const ProductCard = ({
 }: ProductCardProps) => {
   const { addItemToCart } = useCart();
   const { user } = useAuth();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  
+  const isWishlisted = isInWishlist(product.id);
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -34,10 +38,20 @@ const ProductCard = ({
     addItemToCart(product.id);
   };
 
-  const handleAddToWishlist = (e: React.MouseEvent) => {
+  const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toast.success(`${product.name} добавлен в избранное`);
+    
+    if (!user) {
+      toast.error('Необходимо войти в систему, чтобы добавить товар в избранное');
+      return;
+    }
+    
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product.id);
+    }
   };
 
   return (
@@ -59,6 +73,7 @@ const ProductCard = ({
             "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105",
             imageSize === 'large' ? 'aspect-[4/5]' : 'aspect-square'
           )}
+          loading="lazy"
         />
       </Link>
       
@@ -72,19 +87,22 @@ const ProductCard = ({
         </div>
         
         <Link to={`/products/${product.id}`} className="group-hover:text-primary transition-colors">
-          <h3 className="font-medium leading-tight">{product.name}</h3>
+          <h3 className="font-medium leading-tight truncate">{product.name}</h3>
         </Link>
         
         <div className="mt-2 flex items-center justify-between">
           <span className="font-semibold">${product.price.toFixed(2)}</span>
           <Button 
-            variant="ghost"
+            variant={isWishlisted ? "secondary" : "ghost"}
             size="icon"
-            className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={handleAddToWishlist}
-            aria-label="Добавить в избранное"
+            className={cn(
+              "h-8 w-8 rounded-full transition-all z-20",
+              isWishlisted ? "opacity-100" : "opacity-70 hover:opacity-100"
+            )}
+            onClick={handleToggleWishlist}
+            aria-label={isWishlisted ? "Удалить из избранного" : "Добавить в избранное"}
           >
-            <Heart size={16} />
+            <Heart size={16} className={isWishlisted ? "fill-primary text-primary" : ""} />
           </Button>
         </div>
       </div>

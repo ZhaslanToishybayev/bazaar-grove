@@ -1,39 +1,24 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, useTransform } from 'framer-motion';
 import Container from '../ui/Container';
 import ProductCard from '../ui/ProductCard';
-import { getFeaturedProducts, Product } from '@/lib/data';
+import { useFeaturedProducts } from '@/lib/data';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const FeaturedProducts = () => {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const sectionRef = useRef(null);
   const { scrollY } = useScrollAnimation();
+  
+  // Используем React Query для получения избранных товаров
+  const { data: featuredProducts = [], isLoading } = useFeaturedProducts();
   
   // Create transform values for parallax effects
   const topBubbleY = useTransform(scrollY, [300, 1000], [0, 100]);
   const topBubbleX = useTransform(scrollY, [300, 1000], [0, -50]);
   const bottomBubbleY = useTransform(scrollY, [600, 1200], [0, -70]);
 
-  useEffect(() => {
-    const loadFeaturedProducts = async () => {
-      setLoading(true);
-      try {
-        const products = await getFeaturedProducts();
-        setFeaturedProducts(products);
-      } catch (error) {
-        console.error('Failed to load featured products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFeaturedProducts();
-  }, []);
-  
   return (
     <section ref={sectionRef} className="py-16 sm:py-24 relative overflow-hidden">
       {/* Декоративные элементы с параллакс-эффектом */}
@@ -73,7 +58,7 @@ const FeaturedProducts = () => {
           </Link>
         </motion.div>
         
-        {loading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((index) => (
               <div key={index} className="animate-pulse">

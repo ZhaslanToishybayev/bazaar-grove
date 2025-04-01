@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { X, Minus, Plus, Trash2 } from 'lucide-react';
@@ -29,6 +28,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
             src={item.product.image_url || ''}
             alt={item.product.name}
             className="h-full w-full object-cover object-center transform group-hover:scale-110 transition-transform duration-300"
+            loading="lazy"
           />
         </Link>
       </div>

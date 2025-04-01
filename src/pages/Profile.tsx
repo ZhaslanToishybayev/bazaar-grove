@@ -1,7 +1,7 @@
-
-import React from 'react';
+import { type FC, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
+import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import Container from '@/components/ui/Container';
@@ -9,10 +9,55 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { User, ShoppingBag, Heart, Settings, LogOut } from 'lucide-react';
+import { User, ShoppingBag, Heart, Settings, LogOut, Loader2 } from 'lucide-react';
 
-const Profile = () => {
+interface Order {
+  id: string;
+  created_at: string;
+  total_amount: number;
+  status: string;
+  payment_status: string;
+  shipping_address?: string;
+  shipping_city?: string;
+  shipping_postal_code?: string;
+  shipping_country?: string;
+  user_id: string;
+}
+
+const Profile: FC = () => {
   const { user, signOut } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      fetchOrders();
+    }
+  }, [user]);
+
+  const fetchOrders = async () => {
+    if (!user) return;
+
+    try {
+      setLoadingOrders(true);
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      // Type assertion since we know the shape matches our Order interface
+      setOrders(data as Order[]);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
 
   // Redirect to login if not authenticated
   if (!user) {
@@ -27,6 +72,23 @@ const Profile = () => {
   const getInitials = () => {
     if (!user.email) return 'U';
     return user.email.substring(0, 2).toUpperCase();
+  };
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  // Format price
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+    }).format(price);
   };
 
   return (
@@ -104,16 +166,55 @@ const Profile = () => {
                       </TabsContent>
 
                       <TabsContent value="orders">
-                        <div className="text-center py-8">
-                          <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-                          <h3 className="mt-4 text-lg font-medium">Нет заказов</h3>
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            У вас пока нет заказов
-                          </p>
-                          <Button className="mt-4" asChild>
-                            <a href="/products">Начать покупки</a>
-                          </Button>
-                        </div>
+                        {loadingOrders ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                          </div>
+                        ) : orders.length > 0 ? (
+                          <div className="space-y-4">
+                            {orders.map((order) => (
+                              <Card key={order.id}>
+                                <CardContent className="p-4">
+                                  <div className="flex flex-col space-y-2">
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <p className="font-medium">Заказ №{order.id}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                          {formatDate(order.created_at)}
+                                        </p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="font-medium">{formatPrice(order.total_amount)}</p>
+                                        <p className="text-sm text-green-600">
+                                          {order.payment_status === 'paid' ? 'Оплачен' : 'В обработке'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {order.shipping_address && (
+                                      <div className="text-sm text-muted-foreground">
+                                        <p>Адрес доставки:</p>
+                                        <p>{order.shipping_address}</p>
+                                        <p>{order.shipping_city}, {order.shipping_postal_code}</p>
+                                        <p>{order.shipping_country}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+                            <h3 className="mt-4 text-lg font-medium">Нет заказов</h3>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              У вас пока нет заказов
+                            </p>
+                            <Button className="mt-4" asChild>
+                              <a href="/products">Начать покупки</a>
+                            </Button>
+                          </div>
+                        )}
                       </TabsContent>
 
                       <TabsContent value="wishlist">

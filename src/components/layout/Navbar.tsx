@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User, Search, ChevronDown } from 'lucide-react';
+import { Menu, X, User, Search, ChevronDown, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Container from '@/components/ui/Container';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
+import { useWishlist } from '@/lib/wishlist/wishlistContext';
 import CartButton from '@/components/cart/CartButton';
 import PromoBanner from './PromoBanner';
 
@@ -25,6 +25,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { wishlist } = useWishlist();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -69,7 +70,7 @@ const Navbar = () => {
         <Container>
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="text-xl font-bold flex items-center">
-              StoreName
+              JANA
             </Link>
             
             <nav className="hidden md:flex space-x-6">
@@ -97,6 +98,23 @@ const Navbar = () => {
                 <Search className="h-5 w-5" />
               </Button>
               
+              {user && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => navigate('/wishlist')}
+                  aria-label="Избранное"
+                  className="relative"
+                >
+                  <Heart className="h-5 w-5" />
+                  {wishlist.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center">
+                      {wishlist.length}
+                    </span>
+                  )}
+                </Button>
+              )}
+              
               <CartButton />
               
               {user ? (
@@ -117,6 +135,9 @@ const Navbar = () => {
                     <div className="py-2">
                       <Link to="/profile" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">
                         Профиль
+                      </Link>
+                      <Link to="/wishlist" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">
+                        Избранное
                       </Link>
                       <button 
                         onClick={handleSignOut}
@@ -181,6 +202,12 @@ const Navbar = () => {
                     className="text-lg font-medium py-2 transition-colors hover:text-primary"
                   >
                     Профиль
+                  </Link>
+                  <Link 
+                    to="/wishlist"
+                    className="text-lg font-medium py-2 transition-colors hover:text-primary"
+                  >
+                    Избранное
                   </Link>
                   <button 
                     onClick={handleSignOut}
