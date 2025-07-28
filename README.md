@@ -1,69 +1,210 @@
-# Welcome to your Lovable project
+# 🛍️ JANA - Премиум Маркетплейс
 
-## Project info
+**JANA Marketplace** - это современный премиум маркетплейс для уникальных товаров со всего мира, построенный на React, TypeScript и Supabase.
 
-**URL**: https://lovable.dev/projects/0b9f9cf3-ecea-4149-8520-5d72e329ff8c
+![JANA Marketplace](https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=400&fit=crop&auto=format)
 
-## How can I edit this code?
+## ✨ Особенности
 
-There are several ways of editing your application.
+- 🎨 **Современный UI/UX** с использованием shadcn/ui и Tailwind CSS
+- 🔐 **Аутентификация** через Supabase Auth
+- 💳 **Интеграция с Stripe** для обработки платежей
+- 🛒 **Корзина покупок** с синхронизацией в базе данных
+- ❤️ **Список желаний** с синхронизацией в базе данных
+- 📱 **Адаптивный дизайн** для всех устройств
+- 🚀 **Быстрая загрузка** благодаря Vite
+- 📧 **Контактная форма** с уведомлениями администраторов
+- 👨‍💼 **Панель администратора** для управления контентом
 
-**Use Lovable**
+## 🛠️ Технологический стек
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0b9f9cf3-ecea-4149-8520-5d72e329ff8c) and start prompting.
+- **Frontend**: React 18, TypeScript, Vite
+- **Стилизация**: Tailwind CSS, shadcn/ui
+- **База данных**: Supabase (PostgreSQL)
+- **Аутентификация**: Supabase Auth
+- **Платежи**: Stripe Checkout
+- **Деплой**: Lovable Platform
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Быстрый старт
 
-**Use your preferred IDE**
+### Предварительные требования
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js 18+ и npm
+- Аккаунт Supabase
+- Аккаунт Stripe (для платежей)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Установка
 
-Follow these steps:
+1. **Клонируйте репозиторий**
+   ```bash
+   git clone https://github.com/ZhaslanToishybayev/bazaar-grove.git
+   cd bazaar-grove
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Установите зависимости**
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Настройте переменные окружения**
+   
+   Создайте файл `.env.local`:
+   ```env
+   VITE_SUPABASE_URL=https://your-project-id.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. **Запустите проект**
+   ```bash
+   npm run dev
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+Откройте [http://localhost:8080](http://localhost:8080) в браузере.
+
+## 📋 Настройка базы данных
+
+### 1. Создание проекта Supabase
+
+1. Перейдите на [supabase.com](https://supabase.com)
+2. Создайте новый проект
+3. Скопируйте URL проекта и анонимный ключ
+
+### 2. Выполнение миграций
+
+Выполните SQL-скрипты из `src/integrations/supabase/migrations/` в следующем порядке:
+
+1. `01_create_wishlist_table.sql` - таблица избранного
+2. `03_create_admins_table.sql` - таблица администраторов
+3. `02_create_messages_table.sql` - таблица сообщений
+
+### 3. Добавление первого администратора
+
+```sql
+-- Найдите ID вашего пользователя
+SELECT id FROM auth.users WHERE email = 'ваш_email@example.com';
+
+-- Добавьте как администратора
+INSERT INTO admins (user_id) VALUES ('полученный_id_пользователя');
 ```
 
-**Edit a file directly in GitHub**
+## 💳 Настройка Stripe
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 1. Получение API ключей
 
-**Use GitHub Codespaces**
+1. Зарегистрируйтесь на [stripe.com](https://stripe.com)
+2. Получите тестовые ключи в разделе Developers → API keys
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 2. Настройка Edge Function
 
-## What technologies are used for this project?
+1. В Supabase Dashboard перейдите в Functions
+2. Создайте функцию `create-checkout-session`
+3. Скопируйте код из `supabase/functions/create-checkout-session/`
+4. Добавьте переменные окружения:
+   ```
+   STRIPE_SECRET_KEY=sk_test_ваш_секретный_ключ
+   STRIPE_WEBHOOK_SECRET=whsec_ваш_webhook_секрет
+   ```
 
-This project is built with .
+### 3. Настройка Webhook
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. В Stripe Dashboard → Webhooks создайте endpoint:
+   ```
+   https://ваш-проект.functions.supabase.co/create-checkout-session/webhook
+   ```
+2. Выберите событие `checkout.session.completed`
+3. Скопируйте Signing Secret в переменные Supabase
 
-## How can I deploy this project?
+Подробная инструкция: `src/integrations/stripe/README.md`
 
-Simply open [Lovable](https://lovable.dev/projects/0b9f9cf3-ecea-4149-8520-5d72e329ff8c) and click on Share -> Publish.
+## 📁 Структура проекта
 
-## I want to use a custom domain - is that possible?
+```
+src/
+├── components/          # Переиспользуемые компоненты
+│   ├── ui/             # shadcn/ui компоненты
+│   └── ...
+├── pages/              # Страницы приложения
+├── lib/                # Утилиты и провайдеры
+│   ├── auth/           # Аутентификация
+│   ├── cart/           # Корзина покупок
+│   └── wishlist/       # Список желаний
+├── integrations/       # Внешние интеграции
+│   ├── supabase/       # Настройки Supabase
+│   └── stripe/         # Интеграция Stripe
+└── hooks/              # Пользовательские хуки
+```
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+## 🎯 Основные страницы
+
+- `/` - Главная страница с каруселью товаров
+- `/products` - Каталог товаров с фильтрацией
+- `/products/:id` - Детальная страница товара
+- `/categories` - Категории товаров
+- `/about` - О компании
+- `/contacts` - Контактная форма
+- `/auth` - Аутентификация
+- `/profile` - Профиль пользователя
+- `/checkout` - Оформление заказа
+- `/checkout/success` - Страница успешного заказа
+- `/admin` - Панель администратора
+
+## 🔧 Доступные команды
+
+```bash
+npm run dev          # Запуск в режиме разработки (порт 8080)
+npm run build        # Сборка для продакшена
+npm run build:dev    # Сборка в режиме разработки
+npm run preview      # Предварительный просмотр сборки
+npm run lint         # Проверка кода ESLint
+```
+
+## 🚀 Деплой
+
+### Через Netlify/Vercel
+
+1. Подключите репозиторий к платформе
+2. Настройте переменные окружения
+3. Команда сборки: `npm run build`
+4. Папка публикации: `dist`
+
+## 🧪 Тестирование
+
+### Тестовые карты Stripe
+
+- `4242 4242 4242 4242` - Успешный платеж
+- `4000 0000 0000 0002` - Отклоненный платеж
+
+### Проверка функциональности
+
+1. Регистрация/авторизация пользователей
+2. Добавление товаров в корзину и избранное
+3. Оформление заказа через Stripe
+4. Отправка сообщений через контактную форму
+5. Управление контентом через админ-панель
+
+## 🤝 Участие в разработке
+
+1. Форкните репозиторий
+2. Создайте ветку для новой функции (`git checkout -b feature/amazing-feature`)
+3. Зафиксируйте изменения (`git commit -m 'Add amazing feature'`)
+4. Отправьте в ветку (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request
+
+## 📄 Лицензия
+
+Этот проект лицензирован под MIT License.
+
+## 📞 Поддержка
+
+Если у вас возникли вопросы или проблемы:
+
+1. Проверьте документацию в папках `src/integrations/`
+2. Создайте Issue в репозитории
+3. Свяжитесь с разработчиком: [@ZhaslanToishybayev](https://github.com/ZhaslanToishybayev)
+
+---
+
+**Создано с ❤️ разработчиком [Zhaslan Toishybayev](https://github.com/ZhaslanToishybayev)**
+
+
+
